@@ -13,10 +13,21 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\CPU">
+      <UniqueIdentifier>{fa1dcb4e-9e6d-46d3-af25-b546b265488d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Z80.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="CPU.cpp">
+      <Filter>Source Files\CPU</Filter>
     </ClCompile>
+    <ClCompile Include="OPCodes.cpp">
+      <Filter>Source Files\CPU</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="CPU.h">
+      <Filter>Source Files\CPU</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
