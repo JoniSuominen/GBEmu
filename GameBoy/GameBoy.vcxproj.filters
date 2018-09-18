@@ -16,6 +16,9 @@
     <Filter Include="Source Files\CPU">
       <UniqueIdentifier>{fa1dcb4e-9e6d-46d3-af25-b546b265488d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Memory">
+      <UniqueIdentifier>{e81393ea-5b35-4ad7-a462-fc465b918471}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CPU.cpp">
@@ -23,6 +26,9 @@
     </ClCompile>
     <ClCompile Include="OPCodes.cpp">
       <Filter>Source Files\CPU</Filter>
+    </ClCompile>
+    <ClCompile Include="MMU.cpp">
+      <Filter>Source Files\Memory</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

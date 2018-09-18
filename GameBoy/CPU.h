@@ -6,6 +6,17 @@ using namespace std;
 class CPU
 {
 private:
+	union Register
+	{
+		// 2 byte datatype for storing hi and lo bits
+		__int16 reg;
+		struct
+		{
+			uint8_t lo;
+			uint8_t hi;
+
+		};
+	};
 	unordered_map<char, int> clock = {
 		{
 			'm', 0
@@ -15,11 +26,14 @@ private:
 		}
 	};
 
-	unordered_map<char, __int16> registers = {
-		{'a', 0}, {'b', 0}, {'c', 0}, {'d', 0}, {'e', 0}, {'h', 0}, {'l', 0}, {'f', 0}, // 8-bit registers
-		{'pc', 0}, {'sp', 0}, //  16-bit registers 
-		{'m', 0}, {'t', 0} // clock
-	}
+	Register registerAF;
+	Register registerBC;
+	Register registerDE;
+	Register registerHL;
+	uint16_t pc, sp;
+	uint8_t m, t;
 
+public:
+	void executeOpCode();
 
 };

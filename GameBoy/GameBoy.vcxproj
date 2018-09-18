@@ -116,6 +116,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CPU.cpp" />
+    <ClCompile Include="MMU.cpp" />
     <ClCompile Include="OPCodes.cpp" />
   </ItemGroup>
   <ItemGroup>
