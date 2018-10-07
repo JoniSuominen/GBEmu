@@ -20,14 +20,14 @@ void CPU::fetchOpcode() {
 	executeOpCode(opcode);
 }
 
+
 void CPU::executeOpCode(uint8_t opcode)
 {
 	switch (opcode) {
-	}
-}
+	case 0x00: opcode_nop();
+	case 0x01: 
 
-void CPU::ld_reg_reg()
-{
+	}
 
 }
 

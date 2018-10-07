@@ -118,7 +118,7 @@
     <ClCompile Include="CPU.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MMU.cpp" />
-    <ClCompile Include="OPCodes.cpp" />
+    <ClCompile Include="opcodes.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CPU.h" />

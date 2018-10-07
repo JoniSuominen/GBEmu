@@ -34,5 +34,7 @@ public:
 	void fetchOpcode();
 	void executeOpCode(uint8_t opcode);
 	void ld_reg_reg();
+	void opcode_nop();
+
 
 };
