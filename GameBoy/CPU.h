@@ -8,8 +8,7 @@ class CPU
 {
 private:
 	MMU Memory;
-	struct Register {
-		union Registers
+		union Register
 		{
 			// 2 byte datatype for storing hi and lo bits
 			__int16 reg;
@@ -20,11 +19,9 @@ private:
 
 			};
 		};
-	};
 	unordered_map<char, int> clock;
 
 	Register registerAF, registerBC, registerDE, registerHL;
-	Register registers[4] = { registerAF, registerBC, registerDE, registerHL };
 	uint16_t pc, sp;
 	uint8_t m, t;
 
@@ -35,6 +32,7 @@ public:
 	void executeOpCode(uint8_t opcode);
 	void ld_reg_reg();
 	void opcode_nop();
+	void load_16bit(Register reg, uint16_t nn);
 
 
 };
