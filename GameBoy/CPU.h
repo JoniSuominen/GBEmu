@@ -26,10 +26,7 @@ private:
 		}
 	};
 
-	Register registerAF;
-	Register registerBC;
-	Register registerDE;
-	Register registerHL;
+	Register registers[4] = { RegisterBC, RegisterDE, RegisterHL, RegisterAF };
 	uint16_t pc, sp;
 	uint8_t m, t;
 
