@@ -24,8 +24,8 @@ void CPU::fetchOpcode() {
 void CPU::executeOpCode(uint8_t opcode)
 {
 	switch (opcode) {
-	case 0x00: opcode_nop();
-	case 0x01: 
+	case 0x0: opcode_nop();
+
 
 	}
 

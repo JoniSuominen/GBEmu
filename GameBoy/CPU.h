@@ -20,23 +20,24 @@ private:
 			};
 		};
 	unordered_map<char, int> clock;
-
-<<<<<<< HEAD
-	Register registers[4] = { RegisterBC, RegisterDE, RegisterHL, RegisterAF };
-=======
 	Register registerAF, registerBC, registerDE, registerHL;
->>>>>>> origin/master
 	uint16_t pc, sp;
-	uint8_t m, t;
+	uint8_t m, t; 
 
 
 public:
 	CPU();
 	void fetchOpcode();
 	void executeOpCode(uint8_t opcode);
-	void ld_reg_reg();
+
+	// opcodes
 	void opcode_nop();
-	void load_16bit(Register reg, uint16_t nn);
+	void loadMMU_reg8(uint16_t address, uint8_t data);
+	void loadReg_reg16(Register reg);
+	void incr_reg16(uint16_t *address);
+
+
+
 
 
 };

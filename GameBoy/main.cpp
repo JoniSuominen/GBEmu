@@ -6,6 +6,6 @@ using namespace std;
 int main() {
 	cout << " hei" << endl;
 	CPU h;	
-	h.executeOpCode();
+	h.executeOpCode(0x0);
 	system("pause");
 }
