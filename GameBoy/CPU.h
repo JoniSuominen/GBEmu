@@ -30,12 +30,22 @@ public:
 	void fetchOpcode();
 	void executeOpCode(uint8_t opcode);
 
-	// opcodes
-	void opcode_nop();
-	void loadMMU_reg8(uint16_t address, uint8_t data);
-	void loadReg_reg16(Register reg);
-	void incr_reg16(uint16_t *address);
+	/* opcodes */
 
+	// NOP
+	void opcode_nop();
+
+	// LOAD
+	void mmu_load(uint16_t address, uint8_t data);
+	void reg16_load(Register * reg);
+	void reg8_load(uint8_t * address);
+
+	// INCR
+	void incr_reg(uint16_t *address);
+	void incr_reg(uint8_t *address);
+
+	// DEC
+	void decr_reg(uint8_t *address);
 
 
 

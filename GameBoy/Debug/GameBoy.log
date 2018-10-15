@@ -1,6 +1,2 @@
-﻿  CPU.cpp
-  MMU.cpp
-c:\users\jonis\gbemu\gameboy\mmu.cpp(2): warning C4067: unexpected tokens following preprocessor directive - expected a newline
-  opcodes.cpp
-  Generating Code...
+﻿  main.cpp
   GameBoy.vcxproj -> C:\Users\jonis\GBEmu\Debug\GameBoy.exe
