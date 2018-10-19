@@ -4,11 +4,9 @@
 using namespace std;
 
 int main() {
-	int *pointer = new int;
-	*pointer = 5;
-	cout << *pointer << endl;
-	cout << " hei" << endl;
+	uint8_t *pointer = new uint8_t;
+	*pointer = 0b11000001;
 	CPU h;	
-	h.executeOpCode(0x0);
+	h.rlc_reg8(pointer);
 	system("pause");
 }

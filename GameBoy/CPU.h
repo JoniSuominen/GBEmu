@@ -1,5 +1,6 @@
 #include <unordered_map>
 #include <iostream>
+#include <bitset>
 #define CPU_H
 #include "MMU.h"
 using namespace std;
@@ -22,13 +23,18 @@ private:
 	unordered_map<char, int> clock;
 	Register registerAF, registerBC, registerDE, registerHL;
 	uint16_t pc, sp;
-	uint8_t m, t; 
+	uint8_t m, t;
+	const int FLAG_Z = 7;
+	const int FLAG_N = 6;
+	const int FLAG_H = 5;
+	const int FLAG_C = 4;
 
 
 public:
 	CPU();
 	void fetchOpcode();
 	void executeOpCode(uint8_t opcode);
+	void checkCarry(uint8_t *reg);
 
 	/* opcodes */
 
@@ -44,8 +50,12 @@ public:
 	void incr_reg(uint16_t *address);
 	void incr_reg(uint8_t *address);
 
-	// DEC
+	// DECR
 	void decr_reg(uint8_t *address);
+
+	// ROTATE
+	void rlc_reg8(uint8_t *address);
+	
 
 
 

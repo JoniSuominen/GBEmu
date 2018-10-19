@@ -31,4 +31,9 @@ void CPU::executeOpCode(uint8_t opcode)
 
 }
 
+void CPU::checkCarry(uint8_t *reg)
+{
+	
+}
+
 
