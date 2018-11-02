@@ -28,12 +28,25 @@ void CPU::executeOpCode(uint8_t opcode)
 
 
 	}
-
 }
 
-void CPU::checkCarry(uint8_t *reg)
+void CPU::bitset(int flag)
 {
-	
+	this->registerAF.reg |= (1U << flag);
 }
 
+void CPU::bitset(int flag, int value)
+{
+	uint16_t bit = value;
+	bitreset(flag);
+	this->registerAF.reg |= (bit << flag);
+}
 
+int CPU::getBit(int flag)
+{	
+	return this->registerAF.reg >> flag;
+}
+
+void CPU::bitreset(int flag) {
+	this->registerAF.reg &= ~(1U << flag);
+}

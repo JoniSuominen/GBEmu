@@ -34,27 +34,43 @@ public:
 	CPU();
 	void fetchOpcode();
 	void executeOpCode(uint8_t opcode);
-	void checkCarry(uint8_t *reg);
+	void bitset(int flag);
+	void bitreset(int flag);
+	void bitset(int flag, int value);
+	int getBit(int flag);
 
 	/* opcodes */
 
-	// NOP
+	// MISC
 	void opcode_nop();
+	void opcode_stop();
+
+	// JUMPS
+	void jump_n(uint8_t n);
+	void jump_zero(uint8_t n);
 
 	// LOAD
-	void mmu_load(uint16_t address, uint8_t data);
-	void reg16_load(Register * reg);
-	void reg8_load(uint8_t * address);
+	void mmu_load8(uint16_t address, uint8_t data);
+	void mmu_load16(int16_t address, uint8_t data);
+	void reg16_load(Register *reg);
+	void reg8_load(uint8_t & address);
+	void opcode_load8(uint16_t address, uint8_t &destination);
+
+	// ADD
+	void add_2(uint16_t &destination, uint16_t &source);
 
 	// INCR
-	void incr_reg(uint16_t *address);
-	void incr_reg(uint8_t *address);
+	void incr_reg(uint16_t &address);
+	void incr_reg(uint8_t &address);
 
 	// DECR
-	void decr_reg(uint8_t *address);
+	void decr_reg(uint8_t &address);
+	void decr_reg(uint16_t &address);
 
 	// ROTATE
-	void rlc_reg8(uint8_t *address);
+	void rlc_reg8(uint8_t &address);
+	void rrc_reg8(uint8_t &address);
+	void rl_reg8(int8_t &address);
 	
 
 
