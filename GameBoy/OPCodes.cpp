@@ -50,5 +50,4 @@ void CPU::rlc_reg8(uint8_t *address)
 	uint8_t lsb = original >> 7;
 	*address = *address | lsb;
 	cout << std::bitset<8>(*address) << endl;	
-
 }
