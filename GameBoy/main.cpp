@@ -4,9 +4,21 @@
 using namespace std;
 
 int main() {
-	uint8_t *pointer = new uint8_t;
-	*pointer = 0b11000001;
-	CPU h;	
-	h.rlc_reg8(pointer);
+	union Register
+	{
+		// 2 byte datatype for storing hi and lo bits
+		uint16_t reg;
+		struct reg8
+		{
+			unsigned char lo;
+			unsigned char hi;
+
+		} reg8;
+	};
+
+	cout << 0xFFFF + 0xFFFF << endl;
+	int i = 0b1111;
+	i &= ~(1UL << 1);
+	cout << bitset<4>(i) << endl;
 	system("pause");
 }
