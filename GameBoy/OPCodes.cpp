@@ -15,7 +15,13 @@ void CPU::jump_zero(uint8_t n)
 		jump_n(n);
 	}
 }
-
+// LDI (HL), A
+void CPU::mmu_ldi(uint16_t &address, uint8_t &data)
+{
+	mmu_load8(address, data);
+	address += 1;
+}
+	
 // LD (BC), A
 void CPU::mmu_load8(uint16_t address, uint8_t data )
 {
@@ -27,10 +33,21 @@ void CPU::opcode_nop() {
 	cout << "no operation" << endl;
 }
 
+void CPU::opcode_cpl(uint8_t & value)
+{
+	value |= value;
+}
+
 // load A from address pointed by (BC)
 // LD A, (BC)
 void CPU::opcode_load8(uint16_t address, uint8_t &destination) {
 	destination = Memory.readMemory(address);
+}
+
+void CPU::opcode_ldi8(uint16_t & address, uint8_t & destination)
+{
+	opcode_load8(address, destination);
+	address++;
 }
 
 // load immediate data from memory into 16-bit register
@@ -85,6 +102,16 @@ void CPU::incr_reg(uint8_t & address)
 	}
 
 }
+void CPU::incp_reg(int16_t address)
+{
+	uint8_t value = Memory.readMemory(address);
+	if (value + 1 > 0xFF) {
+		bitset(FLAG_C);
+		return;
+	}
+	value++;
+	Memory.writeMemory(value);
+}
 // increment 8-bit register by one
 // DEC B
 void CPU::decr_reg(uint8_t & address)
@@ -107,6 +134,17 @@ void CPU::decr_reg(uint16_t & address)
 	address -= 1;
 
 }
+// DEC (HL)
+void CPU::decp_reg(uint16_t value)
+{
+	uint8_t newValue = Memory.readMemory(value);
+	if (newValue == 0) {
+		bitset(FLAG_C);
+		return;
+	}
+	value--;
+	Memory.writeMemory(newValue);
+}
 /* Rotate left with carry
    RLC A
 */
@@ -115,10 +153,8 @@ void CPU::rlc_reg8(uint8_t &address)
 	uint8_t original = address;
 	address = original << 1;
 	uint8_t lsb = original >> 7;
-<<<<<<< HEAD
-	*address = *address | lsb;
-	cout << std::bitset<8>(*address) << endl;	
-=======
+	address = address | lsb;
+	cout << std::bitset<8>(address) << endl;
 	bitset(FLAG_C, lsb);
 	if (address == 0) {
 		bitset(FLAG_Z);
@@ -143,7 +179,6 @@ void CPU::rrc_reg8(uint8_t & address)
 // RL, A
 void CPU::rl_reg8(int8_t & address)
 {
->>>>>>> 557f5227b28aa8c6e276778090bdd18928f4aac0
 }
 
 
