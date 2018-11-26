@@ -45,6 +45,9 @@ public:
 	void opcode_nop();
 	void opcode_stop();
 	void opcode_cpl(uint8_t & value);
+	void opcode_bcd(uint8_t & value);
+	void opcode_cpl(uint8_t &value);
+	void opcode_scf();
 
 	// JUMPS
 	void jump_n(uint8_t n);
