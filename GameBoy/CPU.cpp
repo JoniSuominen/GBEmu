@@ -38,7 +38,7 @@ void CPU::bitset(int flag)
 void CPU::bitset(int flag, int value)
 {
 	uint16_t bit = value;
-	bitreset(flag);
+	bitreset(flag);	
 	this->registerAF.reg |= (bit << flag);
 }
 

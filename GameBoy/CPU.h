@@ -44,17 +44,20 @@ public:
 	// MISC
 	void opcode_nop();
 	void opcode_stop();
+	void opcode_cpl(uint8_t & value);
 
 	// JUMPS
 	void jump_n(uint8_t n);
 	void jump_zero(uint8_t n);
 
 	// LOAD
+	void mmu_ldi(uint16_t &address, uint8_t &data);
 	void mmu_load8(uint16_t address, uint8_t data);
 	void mmu_load16(int16_t address, uint8_t data);
 	void reg16_load(Register *reg);
 	void reg8_load(uint8_t & address);
 	void opcode_load8(uint16_t address, uint8_t &destination);
+	void opcode_ldi8(uint16_t &address, uint8_t &destination);
 
 	// ADD
 	void add_2(uint16_t &destination, uint16_t &source);
@@ -62,10 +65,12 @@ public:
 	// INCR
 	void incr_reg(uint16_t &address);
 	void incr_reg(uint8_t &address);
+	void incp_reg(int16_t address);
 
 	// DECR
 	void decr_reg(uint8_t &address);
 	void decr_reg(uint16_t &address);
+	void decp_reg(uint16_t value);
 
 	// ROTATE
 	void rlc_reg8(uint8_t &address);
