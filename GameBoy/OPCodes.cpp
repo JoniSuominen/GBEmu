@@ -28,6 +28,12 @@ void CPU::mmu_load8(uint16_t address, uint8_t data )
 	Memory.writeMemory(address, data);
 }
 
+
+void CPU::mmu_load16(int16_t address, uint8_t data)
+{
+	Memory.writeMemory(address, data);
+}
+
 // do nothing
 void CPU::opcode_nop() {
 	cout << "no operation" << endl;
@@ -35,7 +41,58 @@ void CPU::opcode_nop() {
 
 void CPU::opcode_cpl(uint8_t & value)
 {
-	value |= value;
+	value = ~value;
+	bitset(FLAG_N);
+	bitset(FLAG_H);
+}
+
+void CPU::opcode_scf()
+{
+	bitset(FLAG_C);
+	bitreset(FLAG_N);
+	bitreset(FLAG_H);
+}
+
+// DAA
+void CPU::opcode_bcd(uint8_t & value)
+{
+	if (this->registerAF.hi >> FLAG_N == 0) {
+		if (this->registerAF.hi >> FLAG_C == 1 || value > 0x99) {
+			if (value + 0x6 > 0xFF) {
+				bitset(FLAG_C);
+			}
+			value += 0x60;
+			bitset(FLAG_C);
+		}
+		if (this->registerAF.hi >> FLAG_H == 1 || (value & 0x0f) < 0x09) {
+			if (value + 0x6 > 0xFF) {
+				bitset(FLAG_C);
+			}
+			value += 0x6;
+		
+		}
+	}
+	else {
+		if (this->registerAF.hi >> FLAG_Z == 1) {
+			if (value - 0x6 > 0xFF) {
+				bitset(FLAG_C);
+			}
+			value -= 0x60;
+		}
+		if (this->registerAF.hi >> FLAG_H == 1) {
+			if (value - 0x6 > 0xFF) {
+				bitset(FLAG_C);
+			}
+			value -= 0x6;
+		}
+	}
+
+	if (value == 0) {
+		bitset(FLAG_Z);
+	}
+
+	bitreset(FLAG_H);
+
 }
 
 // load A from address pointed by (BC)
