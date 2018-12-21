@@ -2,3 +2,6 @@ Debug
 GameBoy.sln
 GameBoy/Debug/*
 .vs/GameBoy/v15
+GameBoy/GameBoy.vcxproj
+GameBoy/GameBoy.vcxproj.filters
+GameBoy/GameBoy.vcxproj.user
