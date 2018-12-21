@@ -107,6 +107,16 @@ void CPU::opcode_ldi8(uint16_t & address, uint8_t & destination)
 	address++;
 }
 
+void CPU::opcode_copy8(uint8_t value, uint8_t & destination)
+{
+
+}
+
+void CPU::opcode_mmucopy16(uint16_t source, uint8_t & destination)
+{
+	destination = Memory.readMemory(source);
+}
+
 // load immediate data from memory into 16-bit register
 // LD BC, nn
 void CPU::reg16_load(Register *reg)
@@ -124,7 +134,7 @@ void CPU::reg8_load(uint8_t &address)
 
 
 // ADD HL, BC
-void CPU::add_2(uint16_t & destination, uint16_t & source)
+void CPU::add_16(uint16_t & destination, uint16_t & source)
 {
 	bitreset(FLAG_Z);
 	if ((destination & 0x0FFF) + (source & 0x0FFF) > 0x0FFF) {
@@ -135,6 +145,46 @@ void CPU::add_2(uint16_t & destination, uint16_t & source)
 	}
 
 	destination += source;
+}
+
+// ADD A, B
+void CPU::add_8(uint8_t value, uint8_t & destination)
+{
+	uint16_t checksum = value + destination;
+	if (checksum == 0) {
+		bitset(FLAG_Z);
+	}
+	bitreset(FLAG_N);
+
+	if ((value & 0x0F) + (destination & 0x0F) > 0x0F) {
+		bitset(FLAG_H);
+	}
+
+	if (checksum > 0xFF) {
+		bitset(FLAG_C);
+	}
+
+	destination += value;
+}
+
+void CPU::add_mmu(uint16_t value, uint8_t & dest)
+{
+	uint8_t valueToSum = Memory.readMemory(value);
+	uint16_t checksum = valueToSum + dest;
+	if (checksum == 0) {
+		bitset(FLAG_Z);
+	}
+	bitreset(FLAG_N);
+
+	if ((valueToSum & 0x0F) + (dest & 0x0F) > 0x0F) {
+		bitset(FLAG_H);
+	}
+
+	if (checksum > 0xFF) {
+		bitset(FLAG_C);
+	}
+
+	dest += valueToSum;
 }
 
 // increment 16-bit register by one

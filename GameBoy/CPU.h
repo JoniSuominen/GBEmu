@@ -61,9 +61,16 @@ public:
 	void reg8_load(uint8_t & address);
 	void opcode_load8(uint16_t address, uint8_t &destination);
 	void opcode_ldi8(uint16_t &address, uint8_t &destination);
+	void opcode_copy8(uint8_t value, uint8_t &destination);
+	void opcode_mmucopy16(uint16_t source, uint8_t &destination);
+	void opcode_mmucopy8(uint16_t mmulocation, uint8_t data) {
+		Memory.writeMemory(mmulocation, data);
+	}
 
 	// ADD
-	void add_2(uint16_t &destination, uint16_t &source);
+	void add_16(uint16_t &destination, uint16_t &source);
+	void add_8(uint8_t value, uint8_t &destination);
+	void add_mmu(uint16_t value, uint8_t &dest);
 
 	// INCR
 	void incr_reg(uint16_t &address);
