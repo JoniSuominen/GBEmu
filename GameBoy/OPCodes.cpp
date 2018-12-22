@@ -53,6 +53,28 @@ void CPU::opcode_scf()
 	bitreset(FLAG_H);
 }
 
+void CPU::opcode_CP(uint8_t reg1, uint8_t reg2)
+{
+	if (reg1 - reg2 == 0) {
+		bitset(FLAG_Z);
+	}
+	if ((reg1 & 0x0F) > (reg2 & 0x0F)) {
+		bitset(FLAG_H);
+	}
+
+	if (reg2 > reg1) {
+		bitset(FLAG_C);
+	}
+
+	bitset(FLAG_N);
+}
+
+void CPU::opcode_CPmmu(uint8_t reg1, uint16_t pointer)
+{
+	uint8_t val2 = Memory.readMemory(pointer);
+	opcode_CP(reg1, val2);
+}
+
 // DAA
 void CPU::opcode_bcd(uint8_t & value)
 {
@@ -115,6 +137,11 @@ void CPU::opcode_copy8(uint8_t value, uint8_t & destination)
 void CPU::opcode_mmucopy16(uint16_t source, uint8_t & destination)
 {
 	destination = Memory.readMemory(source);
+}
+
+void CPU::opcode_mmucopy8(uint16_t mmulocation, uint8_t data)
+{
+	Memory.writeMemory(mmulocation, data);
 }
 
 // load immediate data from memory into 16-bit register
@@ -187,6 +214,60 @@ void CPU::add_mmu(uint16_t value, uint8_t & dest)
 	dest += valueToSum;
 }
 
+void CPU::adc_reg8(uint8_t source, uint8_t & destination)
+{
+	int carry = getBit(FLAG_C);
+	if (destination + source + carry == 0) {
+		bitset(FLAG_Z);
+	}
+
+	bitreset(FLAG_N);
+
+	if ((source & 0x0F) + (destination & 0x0F) + carry > 0x0F) {
+		bitset(FLAG_H);
+	}
+
+	if (source + destination + carry > 0xFF) {
+		bitset(FLAG_C);
+	}
+
+	destination = source + carry;
+}
+
+void CPU::adc_imm(uint16_t pointer, uint8_t & destination)
+{
+	uint8_t source = Memory.readMemory(pointer);
+	this->adc_reg8(source, destination);
+}
+
+void CPU::sub_reg8(uint8_t value, uint8_t & destination)
+{
+	if (destination - value == 0) {
+		bitset(FLAG_Z);
+	}
+	bitset(FLAG_N);
+
+	if ((destination & 0x0F) < (value & 0x0F)) {
+		bitset(FLAG_H);
+	}
+
+	if (destination - value < 0) {
+		bitset(FLAG_C);
+	}
+}
+
+void CPU::sub_mmu(uint16_t value, uint8_t & destination)
+{
+	uint8_t value = Memory.readMemory(value);
+	sub_reg8(value, destination);
+}
+
+void CPU::sbc_reg8(uint16_t pointer, uint8_t & destination)
+{
+	uint8_t value = Memory.readMemory(pointer) + getBit(FLAG_C);
+	sub_reg8(value, destination);
+}
+
 // increment 16-bit register by one
 // INC BC
 void CPU::incr_reg(uint16_t & address)
@@ -218,6 +299,56 @@ void CPU::incp_reg(int16_t address)
 	}
 	value++;
 	Memory.writeMemory(value);
+}
+void CPU::and_reg8(uint8_t value, uint8_t & destination)
+{
+	destination &= value;
+	if (destination == 0) {
+		bitset(FLAG_Z);
+	}
+
+	bitreset(FLAG_N);
+	bitset(FLAG_H);
+	bitreset(FLAG_C);
+
+}
+void CPU::and_mmu(uint16_t value, uint8_t & destination)
+{
+	uint8_t and = Memory.readMemory(value);
+	this->and_reg8(and, destination);
+}
+void CPU::xor_reg8(uint8_t value, uint8_t & destination)
+{
+	destination ^= value;
+
+	if (destination == 0) {
+		bitset(FLAG_Z);
+	}
+	bitreset(FLAG_N);
+	bitreset(FLAG_H);
+	bitreset(FLAG_C);
+
+}
+void CPU::xor_mmu(uint16_t value, uint8_t & destination)
+{
+	uint8_t val2 = Memory.readMemory(value);
+	xor_reg8(value, destination);
+}
+void CPU::or_reg8(uint8_t value, uint8_t & destination)
+{
+	destination |= value;
+
+	if (destination == 0) {
+		bitset(FLAG_Z);
+	}
+	bitreset(FLAG_N);
+	bitreset(FLAG_H);
+	bitreset(FLAG_C);
+}
+void CPU::or_mmu(uint16_t pointer, uint8_t & destination)
+{
+	uint8_t value = Memory.readMemory(pointer);
+	or_reg8(value, destination);
 }
 // increment 8-bit register by one
 // DEC B
@@ -287,6 +418,18 @@ void CPU::rrc_reg8(uint8_t & address)
 void CPU::rl_reg8(int8_t & address)
 {
 }
+
+void CPU::opcode_ret()
+{
+	this->pc = readFromStack();
+}
+
+void CPU::opcode_retNZ()
+{
+	if (getBit(FLAG_Z) == 0) {
+		opcode_ret();
+	}
+}	
 
 
 

@@ -38,6 +38,7 @@ public:
 	void bitreset(int flag);
 	void bitset(int flag, int value);
 	int getBit(int flag);
+	uint16_t readFromStack();
 
 	/* opcodes */
 
@@ -48,6 +49,9 @@ public:
 	void opcode_bcd(uint8_t & value);
 	void opcode_cpl(uint8_t &value);
 	void opcode_scf();
+	void opcode_CP(uint8_t reg1, uint8_t reg2);
+	void opcode_CPmmu(uint8_t reg1, uint16_t pointer);
+
 
 	// JUMPS
 	void jump_n(uint8_t n);
@@ -63,19 +67,34 @@ public:
 	void opcode_ldi8(uint16_t &address, uint8_t &destination);
 	void opcode_copy8(uint8_t value, uint8_t &destination);
 	void opcode_mmucopy16(uint16_t source, uint8_t &destination);
-	void opcode_mmucopy8(uint16_t mmulocation, uint8_t data) {
-		Memory.writeMemory(mmulocation, data);
-	}
+	void opcode_mmucopy8(uint16_t mmulocation, uint8_t data);
 
 	// ADD
 	void add_16(uint16_t &destination, uint16_t &source);
 	void add_8(uint8_t value, uint8_t &destination);
 	void add_mmu(uint16_t value, uint8_t &dest);
+	void adc_reg8(uint8_t source, uint8_t &destination);
+	void adc_imm(uint16_t pointer, uint8_t &destination);
+
+	// SUBSTRACT
+	void sub_reg8(uint8_t value, uint8_t &destination);
+	void sub_mmu(uint16_t value, uint8_t &destination);
+	void sbc_reg8(uint16_t pointer, uint8_t &destination);
 
 	// INCR
 	void incr_reg(uint16_t &address);
 	void incr_reg(uint8_t &address);
 	void incp_reg(int16_t address);
+
+	// AND, XOR, OR
+	void and_reg8(uint8_t value, uint8_t &destination);
+	void and_mmu(uint16_t value, uint8_t &destination);
+
+	void xor_reg8(uint8_t value, uint8_t &destination);
+	void xor_mmu(uint16_t value, uint8_t &destination);
+
+	void or_reg8(uint8_t value, uint8_t &destination);
+	void or_mmu(uint16_t pointer, uint8_t &destination);
 
 	// DECR
 	void decr_reg(uint8_t &address);
@@ -86,6 +105,10 @@ public:
 	void rlc_reg8(uint8_t &address);
 	void rrc_reg8(uint8_t &address);
 	void rl_reg8(int8_t &address);
+
+	// RETURNS
+	void opcode_ret();
+	void opcdode_retCC();
 	
 
 

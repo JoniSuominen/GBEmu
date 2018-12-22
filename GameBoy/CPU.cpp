@@ -47,6 +47,13 @@ int CPU::getBit(int flag)
 	return this->registerAF.reg >> flag;
 }
 
+uint16_t CPU::readFromStack()
+{
+	uint16_t address = (Memory.readMemory(this->sp) << 8) | (Memory.readMemory(this->sp - 1));
+	this->sp -= 2;
+	return address;
+}
+
 void CPU::bitreset(int flag) {
 	this->registerAF.reg &= ~(1U << flag);
 }
