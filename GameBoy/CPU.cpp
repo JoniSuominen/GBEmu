@@ -49,9 +49,32 @@ int CPU::getBit(int flag)
 
 uint16_t CPU::readFromStack()
 {
-	uint16_t address = (Memory.readMemory(this->sp) << 8) | (Memory.readMemory(this->sp - 1));
-	this->sp -= 2;
+	uint16_t address = (Memory.readMemory(this->sp + 1) << 8) | (Memory.readMemory(this->sp));
+	this->sp += 2;
 	return address;
+}
+
+void CPU::writeToStack(uint16_t data)
+{
+	this->sp--;
+	uint8_t hi = data >> 8;
+	Memory.writeMemory(this->sp, hi);
+	this->sp--;
+	uint8_t lo = data & 0xFF;
+	Memory.writeMemory(this->sp, lo);
+	
+}
+
+uint16_t CPU::jump16()
+{
+	uint16_t address = (Memory.readMemory(this->pc) << 8) | (Memory.readMemory(this->pc + 1));
+	return address;
+}
+
+uint16_t CPU::readTwoBytes()
+{
+	uint16_t data = (Memory.readMemory(this->pc + 1) << 8) | (Memory.readMemory(this->pc + 1));
+	return data;
 }
 
 void CPU::bitreset(int flag) {

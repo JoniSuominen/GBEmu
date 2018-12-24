@@ -2,18 +2,50 @@
 
 // Relative jump signed by immediate
 // JR, N
-void CPU::jump_n(uint8_t n)
+void CPU::jump_n()
 {
 	int8_t signedn = int8_t(Memory.readMemory(this->pc));
 	this->pc++;
-	this->pc += n;
+	this->pc += signedn;
 }
-
-void CPU::jump_zero(uint8_t n)
+// JR Z, n
+void CPU::jump_zero()
 {
 	if (getBit(FLAG_Z) == 0) {
-		jump_n(n);
+		jump_n();
 	}
+}
+// JR C,n
+void CPU::jump_carry()
+{
+	if (getBit(FLAG_C) == 1) {
+		jump_n();
+	}
+}
+// JR NZ, n
+void CPU::jump_notzero()
+{
+	if (getBit(FLAG_Z) != 0) {
+		jump_n();
+	}
+}
+
+// JR, NC
+void CPU::jump_notcarry()
+{
+	if (getBit(FLAG_C) == 0) {
+		jump_n();
+	}
+}
+// JP nn
+void CPU::jump_abs()
+{
+	uint16_t jump = jump16();
+	this->pc = jump;
+}
+void CPU::jump_absNZ()
+{
+	if (getBit(FLAG_Z) != 0) jump_abs();
 }
 // LDI (HL), A
 void CPU::mmu_ldi(uint16_t &address, uint8_t &data)
@@ -73,6 +105,31 @@ void CPU::opcode_CPmmu(uint8_t reg1, uint16_t pointer)
 {
 	uint8_t val2 = Memory.readMemory(pointer);
 	opcode_CP(reg1, val2);
+}
+
+void CPU::opcode_popMmu(uint16_t & reg)
+{
+	uint16_t value = readFromStack();
+}
+
+void CPU::call_nz()
+{
+	if (getBit(FLAG_Z) != 0) {
+		call_nn();
+	}
+}
+
+void CPU::call_nn()
+{
+	uint16_t imd = readTwoBytes();
+	this->pc += 2;
+	writeToStack(pc);
+	this->pc = readTwoBytes();
+}
+
+void CPU::push_reg16(uint16_t reg)
+{
+	writeToStack(reg);
 }
 
 // DAA
@@ -382,6 +439,11 @@ void CPU::decp_reg(uint16_t value)
 	}
 	value--;
 	Memory.writeMemory(newValue);
+}
+void CPU::restart(uint8_t n)
+{
+	writeToStack(this->pc);
+	this->pc = n;
 }
 /* Rotate left with carry
    RLC A

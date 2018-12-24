@@ -12,7 +12,7 @@ private:
 		union Register
 		{
 			// 2 byte datatype for storing hi and lo bits
-			__int16 reg;
+			uint16_t reg;
 			struct
 			{
 				uint8_t lo;
@@ -39,6 +39,9 @@ public:
 	void bitset(int flag, int value);
 	int getBit(int flag);
 	uint16_t readFromStack();
+	void writeToStack(uint16_t data);
+	uint16_t jump16();
+	uint16_t readTwoBytes();
 
 	/* opcodes */
 
@@ -51,11 +54,25 @@ public:
 	void opcode_scf();
 	void opcode_CP(uint8_t reg1, uint8_t reg2);
 	void opcode_CPmmu(uint8_t reg1, uint16_t pointer);
+	void opcode_popMmu(uint16_t &reg);
 
+	// CALLS
+	void call_nz();
+	void call_nn();
+
+	// PUSH
+	void push_reg16(uint16_t reg);
 
 	// JUMPS
-	void jump_n(uint8_t n);
-	void jump_zero(uint8_t n);
+	void jump_n();
+	void jump_zero();
+	void jump_carry();
+	void jump_notzero();
+	void jump_notcarry();
+	void jump_abs();
+	void jump_absNZ();
+
+
 
 	// LOAD
 	void mmu_ldi(uint16_t &address, uint8_t &data);
@@ -101,6 +118,9 @@ public:
 	void decr_reg(uint16_t &address);
 	void decp_reg(uint16_t value);
 
+	// RESTARTS
+	void restart(uint8_t n);
+
 	// ROTATE
 	void rlc_reg8(uint8_t &address);
 	void rrc_reg8(uint8_t &address);
@@ -108,7 +128,7 @@ public:
 
 	// RETURNS
 	void opcode_ret();
-	void opcdode_retCC();
+	void opcode_retNZ();
 	
 
 
