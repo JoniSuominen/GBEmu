@@ -8,9 +8,11 @@ class MMU {
 		uint8_t wram[0x2000]; // 8192 bytes
 		uint8_t eram[0x2000]; // 8192 bytes
 		uint8_t zram[0x80]; // 128 bytes
+		uint8_t cartridgeMemory[0x20000];
 
 
 	public:
 	uint8_t readMemory(uint16_t address);
 	void writeMemory(uint16_t address, uint8_t data);
+	void loadRom(string path);
 };

@@ -1,6 +1,7 @@
 #include <unordered_map>
 #include <iostream>
 #include <bitset>
+#include <fstream>
 #define CPU_H
 #include "MMU.h"
 using namespace std;
@@ -29,10 +30,13 @@ private:
 	const int FLAG_H = 5;
 	const int FLAG_C = 4;
 
+	const INT MAX_CYCLES = 69905;
+	int cycles = 0;
+
 
 public:
 	CPU();
-	void fetchOpcode();
+	void cycle();
 	void executeOpCode(uint8_t opcode);
 	void bitset(int flag);
 	void bitreset(int flag);
@@ -42,6 +46,7 @@ public:
 	void writeToStack(uint16_t data);
 	uint16_t jump16();
 	uint16_t readTwoBytes();
+
 
 	/* opcodes */
 
@@ -53,11 +58,12 @@ public:
 	void opcode_cpl(uint8_t &value);
 	void opcode_scf();
 	void opcode_CP(uint8_t reg1, uint8_t reg2);
-	void opcode_CPmmu(uint8_t reg1, uint16_t pointer);
+	void opcode_CPmmu(uint8_t reg1, uint16_t pointer);	
 	void opcode_popMmu(uint16_t &reg);
 
 	// CALLS
-	void call_nz();
+	void call_false(int flag);
+	void call_true(int flag);
 	void call_nn();
 
 	// PUSH
@@ -70,21 +76,22 @@ public:
 	void jump_notzero();
 	void jump_notcarry();
 	void jump_abs();
-	void jump_absNZ();
+	void jump_absFalse(int flag);
+	void jump_absTrue(int flag);
 
 
 
 	// LOAD
 	void mmu_ldi(uint16_t &address, uint8_t &data);
+	void mmu_ldd(int16_t &address, uint8_t &data);
 	void mmu_load8(uint16_t address, uint8_t data);
-	void mmu_load16(int16_t address, uint8_t data);
 	void reg16_load(Register *reg);
 	void reg8_load(uint8_t & address);
 	void opcode_load8(uint16_t address, uint8_t &destination);
 	void opcode_ldi8(uint16_t &address, uint8_t &destination);
-	void opcode_copy8(uint8_t value, uint8_t &destination);
-	void opcode_mmucopy16(uint16_t source, uint8_t &destination);
+	void opcode_ldd8(uint16_t &address, uint8_t &destination);
 	void opcode_mmucopy8(uint16_t mmulocation, uint8_t data);
+	void ldh_reg8(uint8_t reg);
 
 	// ADD
 	void add_16(uint16_t &destination, uint16_t &source);
@@ -92,11 +99,16 @@ public:
 	void add_mmu(uint16_t value, uint8_t &dest);
 	void adc_reg8(uint8_t source, uint8_t &destination);
 	void adc_imm(uint16_t pointer, uint8_t &destination);
+	void adc_n(uint8_t &destination);
+	void add_n(uint8_t &destination);
 
 	// SUBSTRACT
 	void sub_reg8(uint8_t value, uint8_t &destination);
 	void sub_mmu(uint16_t value, uint8_t &destination);
-	void sbc_reg8(uint16_t pointer, uint8_t &destination);
+	void sbc_imm(uint16_t pointer, uint8_t &destination);
+	void sub_n(uint8_t &destination);
+	void sbc_n(uint8_t &destination);
+	void sbc_reg8(uint8_t pointer, uint8_t &destination);
 
 	// INCR
 	void incr_reg(uint16_t &address);
@@ -105,13 +117,16 @@ public:
 
 	// AND, XOR, OR
 	void and_reg8(uint8_t value, uint8_t &destination);
+	void and_n(uint8_t &destination);
 	void and_mmu(uint16_t value, uint8_t &destination);
 
 	void xor_reg8(uint8_t value, uint8_t &destination);
 	void xor_mmu(uint16_t value, uint8_t &destination);
+	void xor_n(uint8_t &destination);
 
 	void or_reg8(uint8_t value, uint8_t &destination);
 	void or_mmu(uint16_t pointer, uint8_t &destination);
+	void or_n(uint8_t &destination);
 
 	// DECR
 	void decr_reg(uint8_t &address);
@@ -128,7 +143,8 @@ public:
 
 	// RETURNS
 	void opcode_ret();
-	void opcode_retNZ();
+	void opcode_retFalse(int flag);
+	void opcode_retTrue(int Flag);
 	
 
 

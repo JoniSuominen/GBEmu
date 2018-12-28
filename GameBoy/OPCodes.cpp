@@ -5,8 +5,9 @@
 void CPU::jump_n()
 {
 	int8_t signedn = int8_t(Memory.readMemory(this->pc));
-	this->pc++;
 	this->pc += signedn;
+	this->pc++;
+	cycles += 8;
 }
 // JR Z, n
 void CPU::jump_zero()
@@ -42,49 +43,65 @@ void CPU::jump_abs()
 {
 	uint16_t jump = jump16();
 	this->pc = jump;
+	cycles += 12;
 }
-void CPU::jump_absNZ()
+	
+// JP NZ, nn etc..
+void CPU::jump_absFalse(int flag)
 {
-	if (getBit(FLAG_Z) != 0) jump_abs();
+	if (getBit(flag) != 0) jump_abs();
+}
+// JP Z, nn etc
+void CPU::jump_absTrue(int flag)
+{
+	if (getBit(flag)) jump_abs();
 }
 // LDI (HL), A
 void CPU::mmu_ldi(uint16_t &address, uint8_t &data)
 {
 	mmu_load8(address, data);
 	address += 1;
+	
+}
+
+// LDD (HL), A
+void CPU::mmu_ldd(int16_t & address, uint8_t & data)
+{
+	mmu_load8(address, data);
+	address -= 1;
 }
 	
 // LD (BC), A
 void CPU::mmu_load8(uint16_t address, uint8_t data )
 {
 	Memory.writeMemory(address, data);
-}
-
-
-void CPU::mmu_load16(int16_t address, uint8_t data)
-{
-	Memory.writeMemory(address, data);
+	cycles += 8;
 }
 
 // do nothing
 void CPU::opcode_nop() {
 	cout << "no operation" << endl;
+	cycles += 4;
 }
 
+// CPL
 void CPU::opcode_cpl(uint8_t & value)
 {
 	value = ~value;
 	bitset(FLAG_N);
 	bitset(FLAG_H);
+	cycles += 4;
 }
 
+// SCF
 void CPU::opcode_scf()
 {
 	bitset(FLAG_C);
 	bitreset(FLAG_N);
 	bitreset(FLAG_H);
+	cycles += 4;
 }
-
+// CP B
 void CPU::opcode_CP(uint8_t reg1, uint8_t reg2)
 {
 	if (reg1 - reg2 == 0) {
@@ -99,37 +116,50 @@ void CPU::opcode_CP(uint8_t reg1, uint8_t reg2)
 	}
 
 	bitset(FLAG_N);
+	cycles += 4;
 }
 
+//CP (HL)
 void CPU::opcode_CPmmu(uint8_t reg1, uint16_t pointer)
 {
 	uint8_t val2 = Memory.readMemory(pointer);
 	opcode_CP(reg1, val2);
+	// opcode_CP already adds 4 cycles and this one requires 8 thus we add 4 more
+	cycles += 4;
 }
 
-void CPU::opcode_popMmu(uint16_t & reg)
+// POP BC
+void CPU::call_false(int flag)
 {
-	uint16_t value = readFromStack();
+	if (getBit(flag) != 0) {
+		call_nn();
+	}
+	
 }
 
-void CPU::call_nz()
+// CALL Z, nn
+void CPU::call_true(int flag)
 {
-	if (getBit(FLAG_Z) != 0) {
+	if (getBit(flag) == 0) {
 		call_nn();
 	}
 }
 
+// CALL nn
 void CPU::call_nn()
 {
 	uint16_t imd = readTwoBytes();
 	this->pc += 2;
 	writeToStack(pc);
 	this->pc = readTwoBytes();
+	cycles += 12;
 }
 
+// PUSH BC
 void CPU::push_reg16(uint16_t reg)
 {
 	writeToStack(reg);
+	cycles += 16;
 }
 
 // DAA
@@ -171,34 +201,44 @@ void CPU::opcode_bcd(uint8_t & value)
 	}
 
 	bitreset(FLAG_H);
-
+	cycles += 4;
 }
 
 // load A from address pointed by (BC)
 // LD A, (BC)
 void CPU::opcode_load8(uint16_t address, uint8_t &destination) {
 	destination = Memory.readMemory(address);
+	cycles += 8;
 }
-
+// LDI A, (HL)
 void CPU::opcode_ldi8(uint16_t & address, uint8_t & destination)
 {
 	opcode_load8(address, destination);
 	address++;
 }
 
-void CPU::opcode_copy8(uint8_t value, uint8_t & destination)
+// LDD A, (HL)
+void CPU::opcode_ldd8(uint16_t & address, uint8_t & destination)
 {
-
+	opcode_load8(address, destination);
+	address--;
 }
 
-void CPU::opcode_mmucopy16(uint16_t source, uint8_t & destination)
-{
-	destination = Memory.readMemory(source);
-}
 
+// LD (BC), A
 void CPU::opcode_mmucopy8(uint16_t mmulocation, uint8_t data)
 {
 	Memory.writeMemory(mmulocation, data);
+	cycles += 8;
+}
+// LDH (n), A
+void CPU::ldh_reg8(uint8_t reg)
+{
+	uint8_t n = Memory.readMemory(this->pc);
+	pc++;
+	mmu_load8((0xFF00 + n), reg);
+	// add extra 4 cycles for total of 12
+	cycles += 4;
 }
 
 // load immediate data from memory into 16-bit register
@@ -207,12 +247,16 @@ void CPU::reg16_load(Register *reg)
 {
 	reg->lo = Memory.readMemory(this->pc);
 	reg->hi = Memory.readMemory(this->pc+1);
+	this->pc += 2;
+	cycles += 12;
 }
 
-// load 8-bit immediate into register
+// LD C,n
 void CPU::reg8_load(uint8_t &address)
 {
 	address = Memory.readMemory(this->pc);
+	this->pc += 1;
+	cycles += 8;
 }
 
 
@@ -229,6 +273,7 @@ void CPU::add_16(uint16_t & destination, uint16_t & source)
 	}
 
 	destination += source;
+	cycles += 8;
 }
 
 // ADD A, B
@@ -249,8 +294,10 @@ void CPU::add_8(uint8_t value, uint8_t & destination)
 	}
 
 	destination += value;
+	cycles += 4;
 }
 
+// ADD A, (HL)
 void CPU::add_mmu(uint16_t value, uint8_t & dest)
 {
 	uint8_t valueToSum = Memory.readMemory(value);
@@ -269,8 +316,9 @@ void CPU::add_mmu(uint16_t value, uint8_t & dest)
 	}
 
 	dest += valueToSum;
+	cycles += 8;
 }
-
+// ADC A, B
 void CPU::adc_reg8(uint8_t source, uint8_t & destination)
 {
 	int carry = getBit(FLAG_C);
@@ -288,15 +336,38 @@ void CPU::adc_reg8(uint8_t source, uint8_t & destination)
 		bitset(FLAG_C);
 	}
 
-	destination = source + carry;
+	destination += source + carry;
+	cycles += 4;
 }
 
+// ADC A, (HL)
 void CPU::adc_imm(uint16_t pointer, uint8_t & destination)
 {
 	uint8_t source = Memory.readMemory(pointer);
 	this->adc_reg8(source, destination);
+	cycles += 8;
 }
 
+// ADC A, n
+void CPU::adc_n(uint8_t & destination)
+{
+	uint8_t data = Memory.readMemory(this->pc);
+	this->pc++;
+	adc_reg8(data, destination);
+	// add extra 4 cyckes
+	cycles += 4;
+}
+// ADD A, n
+void CPU::add_n(uint8_t & destination)
+{
+	uint8_t data = Memory.readMemory(this->pc);
+	this->pc++;
+	add_8(data, destination);
+	// add extra 4 cycles
+	cycles += 4;
+}
+
+// SUB A, D
 void CPU::sub_reg8(uint8_t value, uint8_t & destination)
 {
 	if (destination - value == 0) {
@@ -311,18 +382,52 @@ void CPU::sub_reg8(uint8_t value, uint8_t & destination)
 	if (destination - value < 0) {
 		bitset(FLAG_C);
 	}
+	cycles += 4;
 }
 
+// SUB A, (HL)
 void CPU::sub_mmu(uint16_t value, uint8_t & destination)
 {
 	uint8_t value = Memory.readMemory(value);
 	sub_reg8(value, destination);
+	// add extra 4 cycles for total of 8 required due to memory access
+	cycles += 4;
 }
 
-void CPU::sbc_reg8(uint16_t pointer, uint8_t & destination)
+// SBC A, (HL)
+void CPU::sbc_imm(uint16_t pointer, uint8_t & destination)
 {
 	uint8_t value = Memory.readMemory(pointer) + getBit(FLAG_C);
 	sub_reg8(value, destination);
+	// add extra 4 cycles for total of 8 required due to memory access
+	cycles += 4;
+}
+
+// SBC A, n
+void CPU::sbc_n(uint8_t & destination)
+{
+	uint8_t data = Memory.readMemory(this->pc);
+	this->pc++;
+	sbc_reg8(data, destination);
+	// add extra 4 cycles for total of 8 required due to memory access
+	cycles += 4;
+}
+
+// SBC A, B
+void CPU::sbc_reg8(uint8_t data, uint8_t & destination)
+{
+	uint8_t value = data + getBit(FLAG_C);
+	sub_reg8(value, destination);
+}
+
+// SUB A, n
+void CPU::sub_n(uint8_t & destination)
+{
+	uint8_t data = Memory.readMemory(this->pc);
+	this->pc++;
+	sub_reg8(data, destination);
+	// add extra 4 cycles for total of 8 required due to memory access
+	cycles += 4;
 }
 
 // increment 16-bit register by one
@@ -330,6 +435,7 @@ void CPU::sbc_reg8(uint16_t pointer, uint8_t & destination)
 void CPU::incr_reg(uint16_t & address)
 {
 	address += 1;
+	cycles += 8;
 }
 
 // increment 8-bit register by one
@@ -345,8 +451,9 @@ void CPU::incr_reg(uint8_t & address)
 	if (original == address >> 2) {
 		bitset(FLAG_H);
 	}
-
+	cycles += 4;
 }
+// INC (HL)
 void CPU::incp_reg(int16_t address)
 {
 	uint8_t value = Memory.readMemory(address);
@@ -355,8 +462,11 @@ void CPU::incp_reg(int16_t address)
 		return;
 	}
 	value++;
-	Memory.writeMemory(value);
+	Memory.writeMemory(address, value);
+	cycles += 12;
 }
+
+// AND B
 void CPU::and_reg8(uint8_t value, uint8_t & destination)
 {
 	destination &= value;
@@ -367,13 +477,30 @@ void CPU::and_reg8(uint8_t value, uint8_t & destination)
 	bitreset(FLAG_N);
 	bitset(FLAG_H);
 	bitreset(FLAG_C);
+	cycles += 4;
 
 }
+
+// AND, n
+void CPU::and_n(uint8_t & destination)
+{
+	uint8_t data = Memory.readMemory(this->pc);
+	pc++;
+	and_reg8(data, destination);
+	// add extra 4 cycles for total of 8 required due to memory access
+	cycles += 4;
+}
+
+// AND (HL)
 void CPU::and_mmu(uint16_t value, uint8_t & destination)
 {
 	uint8_t and = Memory.readMemory(value);
 	this->and_reg8(and, destination);
+	// add extra 4 cycles for total of 8 required due to memory access
+	cycles += 4;
 }
+
+// XOR B
 void CPU::xor_reg8(uint8_t value, uint8_t & destination)
 {
 	destination ^= value;
@@ -384,13 +511,30 @@ void CPU::xor_reg8(uint8_t value, uint8_t & destination)
 	bitreset(FLAG_N);
 	bitreset(FLAG_H);
 	bitreset(FLAG_C);
+	cycles += 4;
 
 }
+
+// XOR (HL)
 void CPU::xor_mmu(uint16_t value, uint8_t & destination)
 {
 	uint8_t val2 = Memory.readMemory(value);
 	xor_reg8(value, destination);
+	// add extra 4 cycles for total of 8 required due to memory access
+	cycles += 4;
 }
+
+// XOR, n
+void CPU::xor_n(uint8_t & destination)
+{
+	uint8_t data = Memory.readMemory(this->pc);
+	pc++;
+	xor_reg8(data, destination);
+	// add extra 4 cycles for total of 8 required due to memory access
+	cycles += 4;
+}
+
+// OR B
 void CPU::or_reg8(uint8_t value, uint8_t & destination)
 {
 	destination |= value;
@@ -401,11 +545,27 @@ void CPU::or_reg8(uint8_t value, uint8_t & destination)
 	bitreset(FLAG_N);
 	bitreset(FLAG_H);
 	bitreset(FLAG_C);
+	cycles += 4;
 }
+
+// OR (HL)
 void CPU::or_mmu(uint16_t pointer, uint8_t & destination)
 {
 	uint8_t value = Memory.readMemory(pointer);
 	or_reg8(value, destination);
+	// add extra 4 cycles for total of 8 required due to memory access
+	cycles += 4;
+}
+
+// OR, n
+void CPU::or_n(uint8_t & destination)
+{
+	uint8_t data = Memory.readMemory(this->pc);
+	pc++;
+	and_reg8(data, destination);
+	// add extra 4 cycles for total of 8 required due to memory access
+	cycles += 4;
+
 }
 // increment 8-bit register by one
 // DEC B
@@ -421,12 +581,14 @@ void CPU::decr_reg(uint8_t & address)
 	if (original == address >> 3) {
 		bitset(FLAG_H);
 	}
+	cycles += 4;
 }
 // DEC BC
 void CPU::decr_reg(uint16_t & address)
 {
 	int original = address >> 3;
 	address -= 1;
+	cycles += 8;
 
 }
 // DEC (HL)
@@ -437,13 +599,15 @@ void CPU::decp_reg(uint16_t value)
 		bitset(FLAG_C);
 		return;
 	}
-	value--;
-	Memory.writeMemory(newValue);
+	newValue--;
+	Memory.writeMemory(value, newValue);
+	cycles += 12;
 }
 void CPU::restart(uint8_t n)
 {
 	writeToStack(this->pc);
 	this->pc = n;
+	cycles += 32;
 }
 /* Rotate left with carry
    RLC A
@@ -459,6 +623,8 @@ void CPU::rlc_reg8(uint8_t &address)
 	if (address == 0) {
 		bitset(FLAG_Z);
 	}
+
+	cycles += 8;
 }
 
 /* Rotate right with carry
@@ -473,6 +639,7 @@ void CPU::rrc_reg8(uint8_t & address)
 	if (address == 0) {
 		bitset(FLAG_Z);
 	}
+	cycles += 8;
 }
 
 // Rotate A left, documentation says this is the same exact opcode as RLC, A: unsure if this should get implemented?
@@ -481,17 +648,29 @@ void CPU::rl_reg8(int8_t & address)
 {
 }
 
+// RET
 void CPU::opcode_ret()
 {
 	this->pc = readFromStack();
+	cycles += 8;
 }
 
-void CPU::opcode_retNZ()
+// RET Z
+void CPU::opcode_retFalse(int flag)
 {
-	if (getBit(FLAG_Z) == 0) {
+	if (getBit(flag) == 0) {
 		opcode_ret();
 	}
-}	
+}
+
+// RET NZ
+void CPU::opcode_retTrue(int flag)
+{
+	if (getBit(flag)) {
+		opcode_ret();
+	}
+}
+
 
 
 

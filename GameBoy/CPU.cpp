@@ -14,10 +14,15 @@ CPU::CPU() {
 		}
 	};
 }
-void CPU::fetchOpcode() {
-	uint8_t opcode = Memory.readMemory(this->pc);
-	this->pc++;
-	executeOpCode(opcode);
+
+void CPU::cycle() {
+	int cyclesBefore = 0;
+	while (this->cycles < MAX_CYCLES) {
+		uint8_t opcode = Memory.readMemory(this->pc);
+		executeOpCode(opcode);
+		int opcodeCycles = cycles - cyclesBefore;
+	}
+	cycles = 0;
 }
 
 
@@ -75,6 +80,18 @@ uint16_t CPU::readTwoBytes()
 {
 	uint16_t data = (Memory.readMemory(this->pc + 1) << 8) | (Memory.readMemory(this->pc + 1));
 	return data;
+}
+
+void CPU::readFile(string path)
+{
+	ifstream inFile;
+	inFile.open(path);
+	if (!inFile) {
+		cout << "Unable to open file" << endl;
+	}
+	else {
+		Memo
+	}
 }
 
 void CPU::bitreset(int flag) {
