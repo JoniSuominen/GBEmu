@@ -30,7 +30,9 @@ private:
 	const int FLAG_H = 5;
 	const int FLAG_C = 4;
 
-	const INT MAX_CYCLES = 69905;
+	bool interruptsEnabled;
+
+	const int MAX_CYCLES = 69905;
 	int cycles = 0;
 
 
@@ -42,10 +44,13 @@ public:
 	void bitreset(int flag);
 	void bitset(int flag, int value);
 	int getBit(int flag);
+	int getBit(int bit, uint8_t reg);
 	uint16_t readFromStack();
 	void writeToStack(uint16_t data);
+	void write16ToMemory(Register reg);
 	uint16_t jump16();
 	uint16_t readTwoBytes();
+	void init();
 
 
 	/* opcodes */
@@ -60,6 +65,7 @@ public:
 	void opcode_CP(uint8_t reg1, uint8_t reg2);
 	void opcode_CPmmu(uint8_t reg1, uint16_t pointer);	
 	void opcode_popMmu(uint16_t &reg);
+	void enable_interrupts();
 
 	// CALLS
 	void call_false(int flag);
@@ -78,6 +84,7 @@ public:
 	void jump_abs();
 	void jump_absFalse(int flag);
 	void jump_absTrue(int flag);
+	void jump_mmu(uint16_t reg);
 
 
 
@@ -91,16 +98,23 @@ public:
 	void opcode_ldi8(uint16_t &address, uint8_t &destination);
 	void opcode_ldd8(uint16_t &address, uint8_t &destination);
 	void opcode_mmucopy8(uint16_t mmulocation, uint8_t data);
-	void ldh_reg8(uint8_t reg);
+	void ld_reg8(uint8_t loc, uint8_t data);
+	void ldh_imm(uint8_t reg);
+	void ldh_a(uint8_t &reg);
+	void load_SP(Register reg);
+	void load_nnReg8(uint8_t reg);
+	void opcode_ldhl();
+	void load_SP_HL();
 
 	// ADD
-	void add_16(uint16_t &destination, uint16_t &source);
+	void add_16(uint16_t &destination, uint16_t source);
 	void add_8(uint8_t value, uint8_t &destination);
 	void add_mmu(uint16_t value, uint8_t &dest);
 	void adc_reg8(uint8_t source, uint8_t &destination);
 	void adc_imm(uint16_t pointer, uint8_t &destination);
 	void adc_n(uint8_t &destination);
 	void add_n(uint8_t &destination);
+	void add_signedToSP();
 
 	// SUBSTRACT
 	void sub_reg8(uint8_t value, uint8_t &destination);
@@ -146,6 +160,10 @@ public:
 	void opcode_retFalse(int flag);
 	void opcode_retTrue(int Flag);
 	
+
+	// EXTENDED OPCODE MAP
+	void test_bit(int bit, uint8_t reg);
+
 
 
 

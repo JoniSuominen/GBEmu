@@ -52,6 +52,11 @@ int CPU::getBit(int flag)
 	return this->registerAF.reg >> flag;
 }
 
+int CPU::getBit(int bit, uint8_t reg)
+{
+	return reg >> bit;
+}
+
 uint16_t CPU::readFromStack()
 {
 	uint16_t address = (Memory.readMemory(this->sp + 1) << 8) | (Memory.readMemory(this->sp));
@@ -70,6 +75,15 @@ void CPU::writeToStack(uint16_t data)
 	
 }
 
+void CPU::write16ToMemory(Register reg)
+{
+	uint16_t nn = readTwoBytes();
+	this->pc += 2;
+	Memory.writeMemory(nn, reg.lo);
+	nn++;
+	Memory.writeMemory(nn, reg.hi);
+}
+
 uint16_t CPU::jump16()
 {
 	uint16_t address = (Memory.readMemory(this->pc) << 8) | (Memory.readMemory(this->pc + 1));
@@ -82,17 +96,18 @@ uint16_t CPU::readTwoBytes()
 	return data;
 }
 
-void CPU::readFile(string path)
+void CPU::init()
 {
-	ifstream inFile;
-	inFile.open(path);
-	if (!inFile) {
-		cout << "Unable to open file" << endl;
-	}
-	else {
-		Memo
-	}
+	pc = 0x100;
+	registerAF.reg = 0x01B0;
+	registerBC.reg = 0x0013;
+	registerDE.reg = 0x00D8;
+	registerHL.reg = 0x014D;
+	sp = 0xFFFE;
+	Memory.init();
+
 }
+
 
 void CPU::bitreset(int flag) {
 	this->registerAF.reg &= ~(1U << flag);

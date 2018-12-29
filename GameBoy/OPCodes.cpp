@@ -56,6 +56,13 @@ void CPU::jump_absTrue(int flag)
 {
 	if (getBit(flag)) jump_abs();
 }
+// JP (HL)
+void CPU::jump_mmu(uint16_t reg)
+{
+	uint8_t address = Memory.readMemory(reg);
+	this->pc = address;
+	cycles += 4;
+}
 // LDI (HL), A
 void CPU::mmu_ldi(uint16_t &address, uint8_t &data)
 {
@@ -125,6 +132,12 @@ void CPU::opcode_CPmmu(uint8_t reg1, uint16_t pointer)
 	uint8_t val2 = Memory.readMemory(pointer);
 	opcode_CP(reg1, val2);
 	// opcode_CP already adds 4 cycles and this one requires 8 thus we add 4 more
+	cycles += 4;
+}
+
+void CPU::enable_interrupts()
+{
+	interruptsEnabled = true;
 	cycles += 4;
 }
 
@@ -231,14 +244,61 @@ void CPU::opcode_mmucopy8(uint16_t mmulocation, uint8_t data)
 	Memory.writeMemory(mmulocation, data);
 	cycles += 8;
 }
+void CPU::ld_reg8(uint8_t loc, uint8_t data)
+{
+	mmu_load8((0xFF00 + loc), data);
+}
 // LDH (n), A
-void CPU::ldh_reg8(uint8_t reg)
+void CPU::ldh_imm(uint8_t reg)
 {
 	uint8_t n = Memory.readMemory(this->pc);
 	pc++;
 	mmu_load8((0xFF00 + n), reg);
 	// add extra 4 cycles for total of 12
 	cycles += 4;
+}
+
+// LDH A, (n)
+void CPU::ldh_a(uint8_t & reg)
+{
+	uint8_t n = Memory.readMemory(this->pc);
+	pc++;
+	reg = Memory.readMemory(0xFF00 + n);
+	cycles += 12;
+}
+// LD (nn), SP
+void CPU::load_SP(Register reg)
+{
+	write16ToMemory(reg);
+	cycles += 20;
+}
+// LD (nn), A
+void CPU::load_nnReg8(uint8_t reg)
+{
+	uint16_t address = readTwoBytes();
+	Memory.writeMemory(address, reg);
+	cycles += 12;
+}
+// LDHL SP, d
+void CPU::opcode_ldhl()
+{
+	int8_t signedInt = Memory.readMemory(this->pc);
+	pc++;
+	if ((this->sp & 0xFF)+ signedInt > 0xFF) {
+		bitset(FLAG_C);
+	}
+
+	if ((this->sp & 0xF) + (signedInt & 0xF) > 0xF) {
+		bitset(FLAG_H);
+	}
+	registerHL.reg = signedInt + sp;
+	cycles += 12;
+}
+
+void CPU::load_SP_HL()
+{
+	this->sp = registerHL.reg;
+	cycles += 8;
 }
 
 // load immediate data from memory into 16-bit register
@@ -262,7 +322,7 @@ void CPU::reg8_load(uint8_t &address)
 
 
 // ADD HL, BC
-void CPU::add_16(uint16_t & destination, uint16_t & source)
+void CPU::add_16(uint16_t & destination, uint16_t source)
 {
 	bitreset(FLAG_Z);
 	if ((destination & 0x0FFF) + (source & 0x0FFF) > 0x0FFF) {
@@ -365,6 +425,22 @@ void CPU::add_n(uint8_t & destination)
 	add_8(data, destination);
 	// add extra 4 cycles
 	cycles += 4;
+}
+// ADD SP, d
+void CPU::add_signedToSP()
+{
+	int8_t signedInt = Memory.readMemory(this->pc);
+	pc++;
+	bitreset(FLAG_Z);
+	bitreset(FLAG_N);
+	if ((this->sp & 0x0FFF) + (signedInt & 0x0FFF) > 0x0FFF) {
+		bitset(FLAG_H);
+	}
+
+	if (this->sp + signedInt > 0xFFFF) {
+		bitset(FLAG_C);
+	}
+	cycles += 16;
 }
 
 // SUB A, D
@@ -670,6 +746,7 @@ void CPU::opcode_retTrue(int flag)
 		opcode_ret();
 	}
 }
+
 
 
 
