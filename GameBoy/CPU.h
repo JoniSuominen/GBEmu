@@ -1,4 +1,5 @@
 #include <unordered_map>
+#include <stdlib.h>
 #include <iostream>
 #include <bitset>
 #include <fstream>
@@ -23,7 +24,8 @@ private:
 		};
 	unordered_map<char, int> clock;
 	Register registerAF, registerBC, registerDE, registerHL;
-	uint16_t pc, sp;
+	Register sp;
+	uint16_t pc;
 	uint8_t m, t;
 	const int FLAG_Z = 7;
 	const int FLAG_N = 6;
@@ -38,6 +40,7 @@ private:
 
 public:
 	CPU();
+	void start();
 	void cycle();
 	void executeOpCode(uint8_t opcode);
 	void bitset(int flag);
@@ -47,10 +50,11 @@ public:
 	int getBit(int bit, uint8_t reg);
 	uint16_t readFromStack();
 	void writeToStack(uint16_t data);
-	void write16ToMemory(Register reg);
+	void writeRegToMemory(Register reg);
 	uint16_t jump16();
 	uint16_t readTwoBytes();
 	void init();
+	uint8_t *getRegister(uint8_t bits);
 
 
 	/* opcodes */
@@ -60,7 +64,6 @@ public:
 	void opcode_stop();
 	void opcode_cpl(uint8_t & value);
 	void opcode_bcd(uint8_t & value);
-	void opcode_cpl(uint8_t &value);
 	void opcode_scf();
 	void opcode_CP(uint8_t reg1, uint8_t reg2);
 	void opcode_CPmmu(uint8_t reg1, uint16_t pointer);	
@@ -92,7 +95,8 @@ public:
 	void mmu_ldi(uint16_t &address, uint8_t &data);
 	void mmu_ldd(int16_t &address, uint8_t &data);
 	void mmu_load8(uint16_t address, uint8_t data);
-	void reg16_load(Register *reg);
+	void load8_imm(uint8_t &reg);
+	void reg16_load(Register &reg);
 	void reg8_load(uint8_t & address);
 	void opcode_load8(uint16_t address, uint8_t &destination);
 	void opcode_ldi8(uint16_t &address, uint8_t &destination);
@@ -101,7 +105,7 @@ public:
 	void ld_reg8(uint8_t loc, uint8_t data);
 	void ldh_imm(uint8_t reg);
 	void ldh_a(uint8_t &reg);
-	void load_SP(Register reg);
+	void load_SP();
 	void load_nnReg8(uint8_t reg);
 	void opcode_ldhl();
 	void load_SP_HL();
@@ -153,7 +157,8 @@ public:
 	// ROTATE
 	void rlc_reg8(uint8_t &address);
 	void rrc_reg8(uint8_t &address);
-	void rl_reg8(int8_t &address);
+	void rl_reg8(uint8_t &address);
+	void rra_reg8(uint8_t &address);
 
 	// RETURNS
 	void opcode_ret();

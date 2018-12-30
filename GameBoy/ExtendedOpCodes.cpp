@@ -2,8 +2,8 @@
 
 void CPU::test_bit(int bit, uint8_t reg)
 {
-	int bit = getBit(bit, reg);
-	if (bit == 0) {
+	int num = getBit(bit, reg);
+	if (num == 0) {
 		bitset(FLAG_Z);
 	}
 	else {

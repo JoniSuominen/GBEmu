@@ -29,24 +29,21 @@ void MMU::writeMemory(uint16_t address, uint8_t data)
 
 }
 
-void MMU::loadRom(string path)
+void MMU::loadRom(const char* path)
 {
-	string binaryNumber;
-	ifstream romPath;
-	romPath.open(path);
-	int counter = 0;
-	if (romPath.is_open()) {
-		while (getline(romPath, binaryNumber)) {
-			uint8_t block;
-			copy(binaryNumber.begin(), binaryNumber.end(), block);
-			cartridgeMemory[counter] = block;
-			counter++;
-		}
-	}
+	memset(cartridgeMemory, 0, sizeof(cartridgeMemory));
+
+	FILE *in;
+	in = fopen(path, "rb");
+	fread(cartridgeMemory, 1, 0x20000, in);
+	fclose(in);
+
 }
 
 void MMU::init()
 {
+	
+	mROM[0x100] = 0x01;
 	mROM[0xFF05] = 0x00;
 	mROM[0xFF06] = 0x00;
 	mROM[0xFF07] = 0x00;

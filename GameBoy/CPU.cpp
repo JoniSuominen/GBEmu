@@ -15,10 +15,20 @@ CPU::CPU() {
 	};
 }
 
+void CPU::start()
+{
+	init();
+	Memory.loadRom("C:\\Users\\jonis\\GBEmu\\test.gb");
+	cycle();
+}
+
 void CPU::cycle() {
 	int cyclesBefore = 0;
 	while (this->cycles < MAX_CYCLES) {
 		uint8_t opcode = Memory.readMemory(this->pc);
+		std::bitset<8> x(opcode);
+		cout << x << endl;
+		pc++;
 		executeOpCode(opcode);
 		int opcodeCycles = cycles - cyclesBefore;
 	}
@@ -26,14 +36,6 @@ void CPU::cycle() {
 }
 
 
-void CPU::executeOpCode(uint8_t opcode)
-{
-	switch (opcode) {
-	case 0x0: opcode_nop();
-
-
-	}
-}
 
 void CPU::bitset(int flag)
 {
@@ -59,23 +61,23 @@ int CPU::getBit(int bit, uint8_t reg)
 
 uint16_t CPU::readFromStack()
 {
-	uint16_t address = (Memory.readMemory(this->sp + 1) << 8) | (Memory.readMemory(this->sp));
-	this->sp += 2;
+	uint16_t address = (Memory.readMemory(this->sp.reg + 1) << 8) | (Memory.readMemory(this->sp.reg));
+	this->sp.reg += 2;
 	return address;
 }
 
 void CPU::writeToStack(uint16_t data)
 {
-	this->sp--;
+	this->sp.reg--;
 	uint8_t hi = data >> 8;
-	Memory.writeMemory(this->sp, hi);
-	this->sp--;
+	Memory.writeMemory(this->sp.reg, hi);
+	this->sp.reg--;
 	uint8_t lo = data & 0xFF;
-	Memory.writeMemory(this->sp, lo);
+	Memory.writeMemory(this->sp.reg, lo);
 	
 }
 
-void CPU::write16ToMemory(Register reg)
+void CPU::writeRegToMemory(Register reg)
 {
 	uint16_t nn = readTwoBytes();
 	this->pc += 2;
@@ -96,6 +98,7 @@ uint16_t CPU::readTwoBytes()
 	return data;
 }
 
+
 void CPU::init()
 {
 	pc = 0x100;
@@ -103,9 +106,27 @@ void CPU::init()
 	registerBC.reg = 0x0013;
 	registerDE.reg = 0x00D8;
 	registerHL.reg = 0x014D;
-	sp = 0xFFFE;
+	sp.reg = 0xFFFE;
 	Memory.init();
 
+}
+
+uint8_t * CPU::getRegister(uint8_t bits)
+{
+	switch (bits)
+	{
+	case 0:  cout << "hi" << endl;  return &registerBC.hi;
+		case 1: return &registerBC.lo;
+		case 2: return &registerDE.hi;
+		case 3: return &registerDE.lo;
+		case 4: return &registerHL.hi;
+		case 5: return &registerHL.lo;
+		case 7: return &registerAF.hi;
+		default: cout << "Not a valid register" << endl; break;
+	}
+	uint8_t ret = 5000;
+	return &ret;
+	// TODO: insert return statement here
 }
 
 

@@ -85,6 +85,16 @@ void CPU::mmu_load8(uint16_t address, uint8_t data )
 	cycles += 8;
 }
 
+
+
+// LD B, n
+void CPU::load8_imm(uint8_t & reg)
+{
+	uint8_t data = Memory.readMemory(this->pc);
+	pc++;
+	reg = 0x41;
+}
+
 // do nothing
 void CPU::opcode_nop() {
 	cout << "no operation" << endl;
@@ -267,9 +277,9 @@ void CPU::ldh_a(uint8_t & reg)
 	cycles += 12;
 }
 // LD (nn), SP
-void CPU::load_SP(Register reg)
+void CPU::load_SP()
 {
-	write16ToMemory(reg);
+	writeRegToMemory(sp);
 	cycles += 20;
 }
 // LD (nn), A
@@ -284,29 +294,29 @@ void CPU::opcode_ldhl()
 {
 	int8_t signedInt = Memory.readMemory(this->pc);
 	pc++;
-	if ((this->sp & 0xFF)+ signedInt > 0xFF) {
+	if ((this->sp.reg & 0xFF)+ signedInt > 0xFF) {
 		bitset(FLAG_C);
 	}
 
-	if ((this->sp & 0xF) + (signedInt & 0xF) > 0xF) {
+	if ((this->sp.reg & 0xF) + (signedInt & 0xF) > 0xF) {
 		bitset(FLAG_H);
 	}
-	registerHL.reg = signedInt + sp;
+	registerHL.reg = signedInt + sp.reg;
 	cycles += 12;
 }
 
 void CPU::load_SP_HL()
 {
-	this->sp = registerHL.reg;
+	this->sp.reg = registerHL.reg;
 	cycles += 8;
 }
 
 // load immediate data from memory into 16-bit register
 // LD BC, nn
-void CPU::reg16_load(Register *reg)
+void CPU::reg16_load(Register &reg)
 {
-	reg->lo = Memory.readMemory(this->pc);
-	reg->hi = Memory.readMemory(this->pc+1);
+	reg.lo = Memory.readMemory(this->pc);
+	reg.hi = Memory.readMemory(this->pc+1);
 	this->pc += 2;
 	cycles += 12;
 }
@@ -433,11 +443,11 @@ void CPU::add_signedToSP()
 	pc++;
 	bitreset(FLAG_Z);
 	bitreset(FLAG_N);
-	if ((this->sp & 0x0FFF) + (signedInt & 0x0FFF) > 0x0FFF) {
+	if ((this->sp.reg & 0x0FFF) + (signedInt & 0x0FFF) > 0x0FFF) {
 		bitset(FLAG_H);
 	}
 
-	if (this->sp + signedInt > 0xFFFF) {
+	if (this->sp.reg + signedInt > 0xFFFF) {
 		bitset(FLAG_C);
 	}
 	cycles += 16;
@@ -464,8 +474,8 @@ void CPU::sub_reg8(uint8_t value, uint8_t & destination)
 // SUB A, (HL)
 void CPU::sub_mmu(uint16_t value, uint8_t & destination)
 {
-	uint8_t value = Memory.readMemory(value);
-	sub_reg8(value, destination);
+	uint8_t val = Memory.readMemory(value);
+	sub_reg8(val, destination);
 	// add extra 4 cycles for total of 8 required due to memory access
 	cycles += 4;
 }
@@ -595,7 +605,7 @@ void CPU::xor_reg8(uint8_t value, uint8_t & destination)
 void CPU::xor_mmu(uint16_t value, uint8_t & destination)
 {
 	uint8_t val2 = Memory.readMemory(value);
-	xor_reg8(value, destination);
+	xor_reg8(val2, destination);
 	// add extra 4 cycles for total of 8 required due to memory access
 	cycles += 4;
 }
@@ -691,14 +701,15 @@ void CPU::restart(uint8_t n)
 void CPU::rlc_reg8(uint8_t &address)
 {
 	uint8_t original = address;
-	address = original << 1;
+	address <<= 1;
 	uint8_t lsb = original >> 7;
-	address = address | lsb;
+	address |= lsb;
 	cout << std::bitset<8>(address) << endl;
 	bitset(FLAG_C, lsb);
 	if (address == 0) {
 		bitset(FLAG_Z);
 	}
+
 
 	cycles += 8;
 }
@@ -711,17 +722,60 @@ void CPU::rrc_reg8(uint8_t & address)
 	uint8_t original = address;
 	address = original >> 1;
 	uint8_t lsb = original & 0b00000001;
+	if (lsb == 1) {
+		address |= (0b00000001 << 7);
+	}
+	else {
+		address	&= ~(1U << 7);
+	}
+
 	bitset(FLAG_C, lsb);
 	if (address == 0) {
 		bitset(FLAG_Z);
 	}
+	bitreset(FLAG_N);
+	bitreset(FLAG_H);
+
 	cycles += 8;
 }
 
 // Rotate A left, documentation says this is the same exact opcode as RLC, A: unsure if this should get implemented?
 // RL, A
-void CPU::rl_reg8(int8_t & address)
+void CPU::rl_reg8(uint8_t & address)
 {
+	address <<= 1;
+	uint8_t bitSeven = address >> 7;
+	uint8_t carry = getBit(FLAG_C);
+	address |= carry;
+	if (bitSeven == 1) {
+		bitset(FLAG_C);
+	}
+	else {
+		bitreset(FLAG_C);
+	}
+	if (address == 0) {
+		bitset(FLAG_Z);
+	}
+
+	bitreset(FLAG_N);
+	bitreset(FLAG_H);
+	cycles += 4;
+}
+// RR A
+void CPU::rra_reg8(uint8_t & address)
+{
+	uint8_t original = address;
+	address >>= 1;
+	uint8_t carry = getBit(FLAG_C);
+	uint8_t bitZero = address |= 0x1;
+	bitset(FLAG_C, bitZero);
+	address |= (carry << 7);
+
+	if (address == 0) {
+		bitset(FLAG_Z);
+	}
+	bitreset(FLAG_N);
+	bitreset(FLAG_H);
 }
 
 // RET
