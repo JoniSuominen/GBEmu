@@ -310,13 +310,20 @@ void CPU::load_SP_HL()
 	this->sp.reg = registerHL.reg;
 	cycles += 8;
 }
+// LD B, n
+void CPU::copy_reg8(uint8_t &destination, uint8_t source)
+{
+	destination = source;
+}
 
 // load immediate data from memory into 16-bit register
 // LD BC, nn
-void CPU::reg16_load(Register &reg)
+void CPU::reg16_load(uint16_t &reg)
 {
-	reg.lo = Memory.readMemory(this->pc);
-	reg.hi = Memory.readMemory(this->pc+1);
+	uint16_t byteLo = Memory.readMemory(this->pc);
+	uint16_t byteHi = Memory.readMemory(this->pc+1);
+	uint16_t twoBytes = (byteHi << 8) | byteLo;
+	reg = twoBytes;
 	this->pc += 2;
 	cycles += 12;
 }

@@ -17,10 +17,6 @@ int main() {
 		} reg8;
 	};
 
-	uint8_t mem = 0x1;
-	mem >>= 3;
-	std::bitset<8> x(mem);
-	cout << x << endl;
 
 	CPU cpu;
 	cpu.init();

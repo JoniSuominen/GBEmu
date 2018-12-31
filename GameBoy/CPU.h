@@ -11,7 +11,7 @@ class CPU
 {
 private:
 	MMU Memory;
-		union Register
+		typedef union Register
 		{
 			// 2 byte datatype for storing hi and lo bits
 			uint16_t reg;
@@ -21,7 +21,7 @@ private:
 				uint8_t hi;
 
 			};
-		};
+		}Register;
 	unordered_map<char, int> clock;
 	Register registerAF, registerBC, registerDE, registerHL;
 	Register sp;
@@ -54,7 +54,9 @@ public:
 	uint16_t jump16();
 	uint16_t readTwoBytes();
 	void init();
-	uint8_t *getRegister(uint8_t bits);
+	uint8_t *get8BitRegister(uint8_t bits);
+	uint16_t *get16BitRegister(uint8_t bits);
+
 
 
 	/* opcodes */
@@ -96,7 +98,7 @@ public:
 	void mmu_ldd(int16_t &address, uint8_t &data);
 	void mmu_load8(uint16_t address, uint8_t data);
 	void load8_imm(uint8_t &reg);
-	void reg16_load(Register &reg);
+	void reg16_load(uint16_t &reg);
 	void reg8_load(uint8_t & address);
 	void opcode_load8(uint16_t address, uint8_t &destination);
 	void opcode_ldi8(uint16_t &address, uint8_t &destination);
@@ -109,6 +111,7 @@ public:
 	void load_nnReg8(uint8_t reg);
 	void opcode_ldhl();
 	void load_SP_HL();
+	void copy_reg8(uint8_t &destination, uint8_t source);
 
 	// ADD
 	void add_16(uint16_t &destination, uint16_t source);

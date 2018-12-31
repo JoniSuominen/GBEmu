@@ -111,7 +111,7 @@ void CPU::init()
 
 }
 
-uint8_t * CPU::getRegister(uint8_t bits)
+uint8_t * CPU::get8BitRegister(uint8_t bits)
 {
 	switch (bits)
 	{
@@ -121,13 +121,28 @@ uint8_t * CPU::getRegister(uint8_t bits)
 		case 3: return &registerDE.lo;
 		case 4: return &registerHL.hi;
 		case 5: return &registerHL.lo;
+		case 6: return &registerAF.lo;
 		case 7: return &registerAF.hi;
 		default: cout << "Not a valid register" << endl; break;
 	}
-	uint8_t ret = 5000;
-	return &ret;
+	return nullptr;
 	// TODO: insert return statement here
 }
+
+uint16_t * CPU::get16BitRegister(uint8_t bits)
+{
+	switch (bits)
+	{
+		case 0: return &registerBC.reg;
+		case 4: return &registerDE.reg;
+		case 8: return &registerHL.reg;
+		case 12: return &sp.reg;
+	}
+	return nullptr;
+}
+
+
+
 
 
 void CPU::bitreset(int flag) {
