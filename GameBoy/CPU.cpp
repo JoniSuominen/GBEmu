@@ -22,26 +22,30 @@ void CPU::start()
 	cycle();
 }
 
+// main emulation loop
 void CPU::cycle() {
 	int cyclesBefore = 0;
+	timerCounter = CLOCKSPEED / 1024;
 	while (this->cycles < MAX_CYCLES) {
 		uint8_t opcode = Memory.readMemory(this->pc);
-		std::bitset<8> x(opcode);
-		cout << x << endl;
 		pc++;
 		executeOpCode(opcode);
 		int opcodeCycles = cycles - cyclesBefore;
+		updateTimers(opcodeCycles);
+		handleInterrupts();
+
 	}
 	cycles = 0;
 }
 
 
-
+// set flag on
 void CPU::bitset(int flag)
 {
 	this->registerAF.reg |= (1U << flag);
 }
 
+// set a flag to a value
 void CPU::bitset(int flag, int value)
 {
 	uint16_t bit = value;
@@ -49,16 +53,19 @@ void CPU::bitset(int flag, int value)
 	this->registerAF.reg |= (bit << flag);
 }
 
+// returns single flag
 int CPU::getBit(int flag)
 {	
 	return this->registerAF.reg >> flag;
 }
 
+// return a single bits value from register
 int CPU::getBit(int bit, uint8_t reg)
 {
-	return reg >> bit;
+	return (reg >> bit) & 0b00000000;
 }
 
+// read a 16-bit address from the stack
 uint16_t CPU::readFromStack()
 {
 	uint16_t address = (Memory.readMemory(this->sp.reg + 1) << 8) | (Memory.readMemory(this->sp.reg));
@@ -66,6 +73,7 @@ uint16_t CPU::readFromStack()
 	return address;
 }
 
+// write a 16-bit register to the stack
 void CPU::writeToStack(uint16_t data)
 {
 	this->sp.reg--;
@@ -77,6 +85,7 @@ void CPU::writeToStack(uint16_t data)
 	
 }
 
+// write two bytes to memory
 void CPU::writeRegToMemory(Register reg)
 {
 	uint16_t nn = readTwoBytes();
@@ -86,19 +95,22 @@ void CPU::writeRegToMemory(Register reg)
 	Memory.writeMemory(nn, reg.hi);
 }
 
+// return the address you must set the program counter to in case of a jump command
 uint16_t CPU::jump16()
 {
 	uint16_t address = (Memory.readMemory(this->pc) << 8) | (Memory.readMemory(this->pc + 1));
 	return address;
 }
 
+// read two bytes from memory and combine them to single 16-bit integer
 uint16_t CPU::readTwoBytes()
 {
-	uint16_t data = (Memory.readMemory(this->pc + 1) << 8) | (Memory.readMemory(this->pc + 1));
+	uint16_t data = (Memory.readMemory(this->pc) << 8) | (Memory.readMemory(this->pc + 1));
+	pc += 2;
 	return data;
 }
 
-
+// initializes the cpu (and mmu)
 void CPU::init()
 {
 	pc = 0x100;
@@ -111,6 +123,7 @@ void CPU::init()
 
 }
 
+// returns an 8-bit register based on the bit order
 uint8_t * CPU::get8BitRegister(uint8_t bits)
 {
 	switch (bits)
@@ -139,6 +152,115 @@ uint16_t * CPU::get16BitRegister(uint8_t bits)
 		case 12: return &sp.reg;
 	}
 	return nullptr;
+}
+
+// update the cpu's internal timers
+void CPU::updateTimers(int cycles)
+{
+	// check whether clock is enabled - decides whether we can update TIMA
+	uint8_t clockBit = Memory.readMemory(TAC);
+	bool clockEnabled = (clockBit & 0b00000100) >> 2 == 1 ? true : false;
+
+	// update divider register
+	dividerRegister += cycles;
+	if (dividerRegister >= 255) {
+		dividerRegister = 0;
+		Memory.incrementDivider();
+	}
+
+	uint8_t currClockFreq = getNewClockFreq();
+	if (TACValue != currClockFreq)
+	{
+		timerCounter = currClockFreq;
+		TACValue = currClockFreq;
+	}
+
+	if (clockEnabled)
+	{
+		timerCounter -= cycles;
+		// if we have done enough cycles to increment 
+		if (timerCounter <= 0)
+		{
+			
+			timerCounter = getNewClockFreq();
+			if (Memory.readMemory(TIMA) == 255) {
+				Memory.writeMemory(TIMA, Memory.readMemory(TMA));
+				setInterrupt(2);
+			}
+			else {
+				Memory.writeMemory(TIMA, Memory.readMemory(TIMA) + 1);
+			}
+		}
+	}
+}
+
+// get the frequency TIMA is currently incrementing at
+int CPU::getNewClockFreq()
+{
+	uint8_t bits = Memory.readMemory(TAC) & 0b11;
+
+	switch (bits)
+	{
+		case 0: return 4096;
+		case 1: return 262144;
+		case 2: return 65536;
+		case 3: return 16384;
+	}
+}
+
+
+void CPU::setInterrupt(int bit)
+{
+	uint8_t reg = Memory.readMemory(0xFF0F);
+	reg = set_bit(reg, bit);
+	Memory.writeMemory(0xFF0F, reg);
+}
+
+void CPU::handleInterrupts()
+{
+	if (IME) {
+		uint8_t enabledBits = Memory.readMemory(0xFFFF);
+		uint8_t interruptFlags = Memory.readMemory(0xFF0F);
+
+		// mean we have some interrupt
+		if (interruptFlags > 0) {
+			for (int i = 0; i < 5; i++) {
+				if (getBit(i, interruptFlags) == 1) {
+					if (getBit(i, enabledBits) == 1) {
+						executeInterrupt(i);
+					}
+				}
+			}
+
+		}
+	}
+}
+
+void CPU::executeInterrupt(int bit)
+{
+	IME = false;
+	uint8_t reg = Memory.readMemory(0xFF0F);
+	reg = reset_bit(reg, bit);
+
+	writeToStack(pc);
+	switch (bit)
+	{
+	case 0: pc = 0x40; break;
+	case 1: pc = 0x48; break;
+	case 2: pc = 0x50; break;
+	case 4: pc = 0x60; break;
+	}
+}
+
+int CPU::set_bit(int reg, int bit)
+{
+	reg |= (1U << bit);
+}
+
+
+int CPU::reset_bit(int reg, int bit)
+{
+	return reg &= ~(1U << bit);
 }
 
 

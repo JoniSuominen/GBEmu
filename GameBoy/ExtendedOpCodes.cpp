@@ -1,6 +1,6 @@
 #include "CPU.h"
 
-void CPU::test_bit(int bit, uint8_t reg)
+void CPU::test_bit(int bit, uint16_t reg)
 {
 	int num = getBit(bit, reg);
 	if (num == 0) {

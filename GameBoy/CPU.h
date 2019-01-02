@@ -27,14 +27,32 @@ private:
 	Register sp;
 	uint16_t pc;
 	uint8_t m, t;
+
+
 	const int FLAG_Z = 7;
 	const int FLAG_N = 6;
 	const int FLAG_H = 5;
 	const int FLAG_C = 4;
 
+	const int TIMA = 0xFF05;
+	const int TMA = 0xFF06;
+	const int TAC = 0xFF07;
+
+	bool IME = true;
+
+	const int DIVIDER = 0xFF04;
+
+	int dividerRegister = 0;
+
+
 	bool interruptsEnabled;
 
-	const int MAX_CYCLES = 69905;
+
+	const int CLOCKSPEED = 4194304;
+	const int MAX_CYCLES = CLOCKSPEED / 60;
+
+	int TACValue = 4096;
+	int timerCounter = CLOCKSPEED / TACValue;
 	int cycles = 0;
 
 
@@ -56,12 +74,18 @@ public:
 	void init();
 	uint8_t *get8BitRegister(uint8_t bits);
 	uint16_t *get16BitRegister(uint8_t bits);
-
+	void updateTimers(int cycles);
+	int getNewClockFreq();
+	void setInterrupt(int bit);
+	void handleInterrupts();
+	void executeInterrupt(int bit);
+	int set_bit(int reg, int bit);
+	int reset_bit(int reg, int bit);
 
 
 	/* opcodes */
 
-	// MISC
+	// MISC	
 	void opcode_nop();
 	void opcode_stop();
 	void opcode_cpl(uint8_t & value);
@@ -71,6 +95,9 @@ public:
 	void opcode_CPmmu(uint8_t reg1, uint16_t pointer);	
 	void opcode_popMmu(uint16_t &reg);
 	void enable_interrupts();
+	void opcode_di();
+	void opcode_ei();
+	void opcode_resetIME();
 
 	// CALLS
 	void call_false(int flag);
@@ -94,15 +121,15 @@ public:
 
 
 	// LOAD
-	void mmu_ldi(uint16_t &address, uint8_t &data);
-	void mmu_ldd(int16_t &address, uint8_t &data);
+	void mmu_ldi(uint16_t address, uint8_t &data);
+	void mmu_ldd(uint16_t address, uint8_t &data);
 	void mmu_load8(uint16_t address, uint8_t data);
 	void load8_imm(uint8_t &reg);
 	void reg16_load(uint16_t &reg);
 	void reg8_load(uint8_t & address);
 	void opcode_load8(uint16_t address, uint8_t &destination);
-	void opcode_ldi8(uint16_t &address, uint8_t &destination);
-	void opcode_ldd8(uint16_t &address, uint8_t &destination);
+	void opcode_ldi8(uint16_t address, uint8_t &destination);
+	void opcode_ldd8(uint16_t address, uint8_t &destination);
 	void opcode_mmucopy8(uint16_t mmulocation, uint8_t data);
 	void ld_reg8(uint8_t loc, uint8_t data);
 	void ldh_imm(uint8_t reg);
@@ -112,6 +139,7 @@ public:
 	void opcode_ldhl();
 	void load_SP_HL();
 	void copy_reg8(uint8_t &destination, uint8_t source);
+	void mmu_imm(uint16_t address);
 
 	// ADD
 	void add_16(uint16_t &destination, uint16_t source);
@@ -170,7 +198,7 @@ public:
 	
 
 	// EXTENDED OPCODE MAP
-	void test_bit(int bit, uint8_t reg);
+	void test_bit(int bit, uint16_t reg);
 
 
 

@@ -64,7 +64,7 @@ void CPU::jump_mmu(uint16_t reg)
 	cycles += 4;
 }
 // LDI (HL), A
-void CPU::mmu_ldi(uint16_t &address, uint8_t &data)
+void CPU::mmu_ldi(uint16_t address, uint8_t &data)
 {
 	mmu_load8(address, data);
 	address += 1;
@@ -72,7 +72,7 @@ void CPU::mmu_ldi(uint16_t &address, uint8_t &data)
 }
 
 // LDD (HL), A
-void CPU::mmu_ldd(int16_t & address, uint8_t & data)
+void CPU::mmu_ldd(uint16_t  address, uint8_t & data)
 {
 	mmu_load8(address, data);
 	address -= 1;
@@ -149,6 +149,23 @@ void CPU::enable_interrupts()
 {
 	interruptsEnabled = true;
 	cycles += 4;
+}
+
+void CPU::opcode_di()
+{
+	IME = false;
+	cycles += 4;
+}
+
+void CPU::opcode_ei()
+{
+	IME = true;
+	cycles += 4;
+}
+
+void CPU::opcode_resetIME()
+{
+	IME = true;
 }
 
 // POP BC
@@ -234,14 +251,14 @@ void CPU::opcode_load8(uint16_t address, uint8_t &destination) {
 	cycles += 8;
 }
 // LDI A, (HL)
-void CPU::opcode_ldi8(uint16_t & address, uint8_t & destination)
+void CPU::opcode_ldi8(uint16_t  address, uint8_t & destination)
 {
 	opcode_load8(address, destination);
 	address++;
 }
 
 // LDD A, (HL)
-void CPU::opcode_ldd8(uint16_t & address, uint8_t & destination)
+void CPU::opcode_ldd8(uint16_t  address, uint8_t & destination)
 {
 	opcode_load8(address, destination);
 	address--;
@@ -276,6 +293,7 @@ void CPU::ldh_a(uint8_t & reg)
 	reg = Memory.readMemory(0xFF00 + n);
 	cycles += 12;
 }
+
 // LD (nn), SP
 void CPU::load_SP()
 {
@@ -314,6 +332,13 @@ void CPU::load_SP_HL()
 void CPU::copy_reg8(uint8_t &destination, uint8_t source)
 {
 	destination = source;
+}
+
+void CPU::mmu_imm(uint16_t address)
+{
+	uint8_t data = Memory.readMemory(this->pc);
+	pc++;
+	mmu_load8(address, data);
 }
 
 // load immediate data from memory into 16-bit register
