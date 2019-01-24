@@ -22,7 +22,6 @@ private:
 
 			};
 		}Register;
-	unordered_map<char, int> clock;
 	Register registerAF, registerBC, registerDE, registerHL;
 	Register sp;
 	uint16_t pc;
@@ -189,7 +188,14 @@ public:
 	void rlc_reg8(uint8_t &address);
 	void rrc_reg8(uint8_t &address);
 	void rl_reg8(uint8_t &address);
-	void rra_reg8(uint8_t &address);
+	void rr_reg8(uint8_t &address);
+	void ext_rlc(uint16_t pointer);
+	void ext_rrc(uint16_t pointer);
+	void ext_rl(uint16_t pointer);
+	void ext_rr(uint16_t pointer);
+
+	// SHIFTS
+	void ext_sla(uint8_t &address);
 
 	// RETURNS
 	void opcode_ret();

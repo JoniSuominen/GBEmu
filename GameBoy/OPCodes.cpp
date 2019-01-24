@@ -794,7 +794,7 @@ void CPU::rl_reg8(uint8_t & address)
 	cycles += 4;
 }
 // RR A
-void CPU::rra_reg8(uint8_t & address)
+void CPU::rr_reg8(uint8_t & address)
 {
 	uint8_t original = address;
 	address >>= 1;
