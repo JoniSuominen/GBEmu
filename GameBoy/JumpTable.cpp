@@ -39,7 +39,6 @@ void CPU::executeOpCode(uint8_t opcode)
 	// MISC
 
 	case 0x0: opcode_nop();
-	case 0x10: opcode_stop();
 
 	// LOADS
 
@@ -158,13 +157,20 @@ void CPU::executeOpCode(uint8_t opcode)
 	}
 
 	// DEC reg16
+	case 0xB: decr_reg(registerBC.reg); break;
+	case 0x1b: decr_reg(registerDE.reg); break;
+	case 0x2b: decr_reg(registerHL.reg); break;
+	case 0x3b: decr_reg(sp.reg); break;
+	/*
 	case 0xB: case 0x1B: case 0x2B: case 0x3B:
 	{
 		uint16_t target = opcode >> 2;
 		uint16_t *pointerToTarget = get16BitRegister(target);
+		cout << *pointerToTarget << endl;
 		decr_reg(*pointerToTarget);
 		break;
 	}
+	*/
 
 	case 0x35: decp_reg(registerHL.reg); break;
 
@@ -244,7 +250,7 @@ void CPU::executeOpCode(uint8_t opcode)
 
 	default: {
 
-		cout << "UNIMPLEMENTED INSTRUCTION" << hex << opcode << endl;
+		cout << "UNIMPLEMENTED INSTRUCTION: " << hex << static_cast<int>(opcode) << endl;
 	}
 
 	}

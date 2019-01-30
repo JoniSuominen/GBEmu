@@ -56,7 +56,6 @@ private:
 
 
 public:
-	CPU();
 	void start();
 	void cycle();
 	void executeOpCode(uint8_t opcode);
@@ -149,7 +148,6 @@ public:
 	void adc_n(uint8_t &destination);
 	void add_n(uint8_t &destination);
 	void add_signedToSP();
-
 	// SUBSTRACT
 	void sub_reg8(uint8_t value, uint8_t &destination);
 	void sub_mmu(uint16_t value, uint8_t &destination);
@@ -196,6 +194,7 @@ public:
 
 	// SHIFTS
 	void ext_sla(uint8_t &address);
+	void ext_sra(uint8_t &address);
 
 	// RETURNS
 	void opcode_ret();
@@ -205,8 +204,7 @@ public:
 
 	// EXTENDED OPCODE MAP
 	void test_bit(int bit, uint16_t reg);
-
-
+	void ext_swap(uint8_t &reg);
 
 
 

@@ -20,7 +20,7 @@ int main() {
 
 	CPU cpu;
 	cpu.init();
-	cpu.executeOpCode(0x16);
+	cpu.start();
 	system("pause");
 
 }

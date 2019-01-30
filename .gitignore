@@ -5,3 +5,4 @@ GameBoy/Debug/*
 GameBoy.vcxproj
 GameBoy.vcxproj.filters
 GameBoy.vcxproj.user
+test.gb

@@ -3,23 +3,13 @@
 using namespace std;
 
 
-CPU::CPU() {
-
-	clock = {
-		{
-			'm', 0
-		},
-		{
-			't', 0
-		}
-	};
-}
-
 void CPU::start()
 {
 	init();
 	Memory.loadRom("C:\\Users\\jonis\\GBEmu\\test.gb");
-	cycle();
+	while (true) {
+		cycle();
+	}
 }
 
 // main emulation loop
@@ -27,7 +17,7 @@ void CPU::cycle() {
 	int cyclesBefore = 0;
 	timerCounter = CLOCKSPEED / 1024;
 	while (this->cycles < MAX_CYCLES) {
-		uint8_t opcode = Memory.readMemory(this->pc);
+		uint8_t opcode = int(Memory.readMemory(this->pc));
 		pc++;
 		executeOpCode(opcode);
 		int opcodeCycles = cycles - cyclesBefore;
@@ -146,10 +136,11 @@ uint16_t * CPU::get16BitRegister(uint8_t bits)
 {
 	switch (bits)
 	{
-		case 0: return &registerBC.reg;
-		case 4: return &registerDE.reg;
-		case 8: return &registerHL.reg;
-		case 12: return &sp.reg;
+	case 0: cout << "bc " << endl; return &registerBC.reg;
+	case 2: return &sp.reg;
+	case 4: cout << "de" << endl; return &registerDE.reg;
+	case 8:cout << "hl" << endl; return &registerHL.reg;
+	case 12: cout << "sp" << endl; return &sp.reg;
 	}
 	return nullptr;
 }
@@ -254,7 +245,7 @@ void CPU::executeInterrupt(int bit)
 
 int CPU::set_bit(int reg, int bit)
 {
-	reg |= (1U << bit);
+	return reg |= (1U << bit);
 }
 
 

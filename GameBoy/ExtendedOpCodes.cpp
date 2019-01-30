@@ -1,5 +1,5 @@
 #include "CPU.h"
-
+// BIT n, reg
 void CPU::test_bit(int bit, uint16_t reg)
 {
 	int num = getBit(bit, reg);
@@ -12,6 +12,15 @@ void CPU::test_bit(int bit, uint16_t reg)
 
 	bitreset(FLAG_N);
 	bitset(FLAG_H);
+}
+
+// SWAP B
+void CPU::ext_swap(uint8_t & reg)
+{
+	uint8_t lower = (reg & 0x0F) << 4;
+	uint8_t higher = reg >> 4;
+	reg = (lower & higher);
+	cycles += 8;
 }
 
 
@@ -32,6 +41,7 @@ void CPU::ext_rrc(uint16_t pointer)
 	cycles += 8;
 }
 
+// RL C
 void CPU::ext_rl(uint16_t pointer)
 {
 	uint8_t address = Memory.readMemory(pointer);
@@ -40,6 +50,7 @@ void CPU::ext_rl(uint16_t pointer)
 	cycles += 8;
 }
 
+// RR C
 void CPU::ext_rr(uint16_t pointer)
 {
 	uint8_t address = Memory.readMemory(pointer);
@@ -48,6 +59,7 @@ void CPU::ext_rr(uint16_t pointer)
 	cycles += 8;
 }
 
+//SLA
 void CPU::ext_sla(uint8_t & address)
 {
 	int msb = address >> 7;
@@ -59,6 +71,20 @@ void CPU::ext_sla(uint8_t & address)
 		bitset(FLAG_Z);
 	}
 
+	address = set_bit(address, msb);
+}
+
+void CPU::ext_sra(uint8_t & address)
+{
+	int msb = address >> 7;
+	address >>= 1;
 	bitset(FLAG_C, msb);
+	bitreset(FLAG_N);
+	bitreset(FLAG_H);
+	if (address == 0) {
+		bitset(FLAG_Z);
+	}
+
+	address = set_bit(address, msb);
 }
 

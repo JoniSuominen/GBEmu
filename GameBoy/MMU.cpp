@@ -64,13 +64,17 @@ void MMU::incrementDivider()
 void MMU::loadRom(const char* path)
 {
 	memset(cartridgeMemory, 0, sizeof(cartridgeMemory));
-
+	cout << path << endl;
 	FILE *in;
 	in = fopen(path, "rb");
 	fread(cartridgeMemory, 1, 0x20000, in);
 	fclose(in);
 	currentRAMBank = 0;
-
+	/*
+	for (int i = 0; i < (sizeof(cartridgeMemory) / sizeof(*cartridgeMemory)); i++) {
+		cout << int( cartridgeMemory[i]) << endl;
+	}
+	*/
 }
 
 void MMU::init()

@@ -97,7 +97,6 @@ void CPU::load8_imm(uint8_t & reg)
 
 // do nothing
 void CPU::opcode_nop() {
-	cout << "no operation" << endl;
 	cycles += 4;
 }
 
