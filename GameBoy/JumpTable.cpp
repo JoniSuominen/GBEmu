@@ -238,7 +238,43 @@ void CPU::executeOpCode(uint8_t opcode)
 	}
 
 	case 0x9E: sbc_imm(registerHL.reg, registerAF.hi); break;
-	case 0xDE: sbc_n(registerAF.hi);
+	case 0xDE: sbc_n(registerAF.hi); break;
+
+	// AND REG8
+	case 0xA0: case 0xA1: case 0xA2: case 0xA3: case 0xA4: case 0xA5: case 0xA7:
+	{
+		uint8_t target = opcode & 0b00000111;
+		uint8_t *pointerToRegister = get8BitRegister(target);
+		and_reg8(*pointerToRegister, registerAF.hi);
+		break;
+	}
+	
+	// XOR REG8
+	case 0xA8: case 0xA9: case 0xAA: case 0xAB: case 0xAC: case 0xAD: case 0xAF:
+	{
+		uint8_t target = opcode & 0b00000111;
+		uint8_t *pointerToRegister = get8BitRegister(target);
+		xor_reg8(*pointerToRegister, registerAF.hi);
+		break;
+	}
+
+	// OR REG8
+	case 0xB0: case 0xB1: case 0xB2: case 0xB3: case 0xB4: case 0xB5: case 0xB7:
+	{
+		uint8_t target = opcode & 0b00000111;
+		uint8_t *pointerToRegister = get8BitRegister(target);
+		or_reg8(*pointerToRegister, registerAF.hi);
+		break;
+	}
+	
+	// CP REG8
+	case 0xB8: case 0xB9: case 0xBA: case 0xBB: case 0xBC: case 0xBD: case 0xBF:
+	{
+		uint8_t target = opcode & 0b00000111;
+		uint8_t *pointerToRegister = get8BitRegister(target);
+		opcode_CP(*pointerToRegister, registerAF.hi);
+		break;
+	}
 
 
 

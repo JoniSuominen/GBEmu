@@ -27,18 +27,18 @@ private:
 	uint8_t m, t;
 
 
-	static int FLAG_Z = 7;
-	static int FLAG_N = 6;
-	static int FLAG_H = 5;
-	static int FLAG_C = 4;
+	static const int FLAG_Z = 7;
+	static const int FLAG_N = 6;
+	static const int FLAG_H = 5;
+	static const int FLAG_C = 4;
 
-	static int TIMA = 0xFF05; // TIMER inremented by clock frequency specified by TAC register
-	static int TMA = 0xFF06; // Loaded into TIMA on TIMA overflow
-	static int TAC = 0xFF07; // Contains the timer at which TIMA should be incrementing at
+	static const int TIMA = 0xFF05; // TIMER inremented by clock frequency specified by TAC register
+	static const int TMA = 0xFF06; // Loaded into TIMA on TIMA overflow
+	static const int TAC = 0xFF07; // Contains the timer at which TIMA should be incrementing at
 
 	bool IME = true;
 
-	static int DIVIDER = 0xFF04;
+	static const int DIVIDER = 0xFF04;
 
 	int dividerRegister = 0;
 
@@ -46,8 +46,8 @@ private:
 	bool interruptsEnabled;
 
 
-	static int CLOCKSPEED = 4194304;
-	static int MAX_CYCLES = CLOCKSPEED / 60;
+	static const int CLOCKSPEED = 4194304;
+	static const int MAX_CYCLES = CLOCKSPEED / 60;
 
 	int TACValue = 4096;
 	int timerCounter = CLOCKSPEED / TACValue;

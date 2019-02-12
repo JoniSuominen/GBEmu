@@ -22,6 +22,7 @@ void CPU::cycle() {
 		uint8_t opcode = int(Memory.readMemory(this->pc));
 		pc++;
 		executeOpCode(opcode);
+		cout << hex << static_cast<int>(opcode) << endl;
 		int opcodeCycles = cycles - cyclesBefore;
 		updateTimers(opcodeCycles);
 		handleInterrupts();
@@ -139,11 +140,11 @@ uint16_t * CPU::get16BitRegister(uint8_t bits)
 {
 	switch (bits)
 	{
-	case 0: cout << "bc " << endl; return &registerBC.reg;
-	case 2: return &sp.reg;
-	case 4: cout << "de" << endl; return &registerDE.reg;
-	case 8:cout << "hl" << endl; return &registerHL.reg;
-	case 12: cout << "sp" << endl; return &sp.reg;
+		case 0: cout << "bc " << endl; return &registerBC.reg;
+		case 2: cout << "sp" << endl;  return &sp.reg;
+		case 4: cout << "de" << endl; return &registerDE.reg;
+		case 8:cout << "hl" << endl; return &registerHL.reg;
+		case 12: cout << "af" << endl; return &registerAF.reg;
 	}
 	return nullptr;
 }
