@@ -611,8 +611,8 @@ void CPU::and_n(uint8_t & destination)
 // AND (HL)
 void CPU::and_mmu(uint16_t value, uint8_t & destination)
 {
-	uint8_t and = Memory.readMemory(value);
-	this->and_reg8(and, destination);
+	uint8_t a = Memory.readMemory(value);
+	this->and_reg8(a, destination);
 	// add extra 4 cycles for total of 8 required due to memory access
 	cycles += 4;
 }

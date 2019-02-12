@@ -6,7 +6,9 @@ using namespace std;
 void CPU::start()
 {
 	init();
-	Memory.loadRom("C:\\Users\\jonis\\GBEmu\\test.gb");
+	Memory.loadRom("C:\\Users\\Joni\\source\\repos\\GameBoy\\test.gb");
+	cout << " XD" << endl;
+
 	while (true) {
 		cycle();
 	}
@@ -52,7 +54,7 @@ int CPU::getBit(int flag)
 // return a single bits value from register
 int CPU::getBit(int bit, uint8_t reg)
 {
-	return (reg >> bit) & 0b00000000;
+	return (reg >> bit) & 0b00000001;
 }
 
 // read a 16-bit address from the stack
@@ -132,6 +134,7 @@ uint8_t * CPU::get8BitRegister(uint8_t bits)
 	// TODO: insert return statement here
 }
 
+// Used to algorithmically decode which 16-bit register the bits point to
 uint16_t * CPU::get16BitRegister(uint8_t bits)
 {
 	switch (bits)
@@ -199,7 +202,7 @@ int CPU::getNewClockFreq()
 	}
 }
 
-
+// set interupt to happen
 void CPU::setInterrupt(int bit)
 {
 	uint8_t reg = Memory.readMemory(0xFF0F);
@@ -207,6 +210,10 @@ void CPU::setInterrupt(int bit)
 	Memory.writeMemory(0xFF0F, reg);
 }
 
+/*
+	Check if interrupts have been enabled and execute enabled interrupts
+	in order
+*/
 void CPU::handleInterrupts()
 {
 	if (IME) {
@@ -227,6 +234,7 @@ void CPU::handleInterrupts()
 	}
 }
 
+// execute interrupts which were enabled
 void CPU::executeInterrupt(int bit)
 {
 	IME = false;
@@ -243,21 +251,19 @@ void CPU::executeInterrupt(int bit)
 	}
 }
 
+// Set a single bit in register
 int CPU::set_bit(int reg, int bit)
 {
 	return reg |= (1U << bit);
 }
 
-
-int CPU::reset_bit(int reg, int bit)
+// reset a single bit in register
+int CPU::reset_bit(uint8_t &reg, int bit)
 {
 	return reg &= ~(1U << bit);
 }
 
-
-
-
-
+// reset a single bit in flag AF
 void CPU::bitreset(int flag) {
 	this->registerAF.reg &= ~(1U << flag);
 }

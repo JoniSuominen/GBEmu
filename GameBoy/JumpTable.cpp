@@ -38,15 +38,17 @@ void CPU::executeOpCode(uint8_t opcode)
 	
 	// MISC
 
-	case 0x0: opcode_nop();
+	case 0x0: opcode_nop(); break;
+	case 0x20: jump_notzero(); break;
+	case 0x30: jump_notcarry(); break;
 
 	// LOADS
 
 	// LD (nn), SP
-	case 0x8: load_SP(); break;
+	case 0x08: load_SP(); break;
 
 	// LD REG16, nn
-	case 0x1: case 0x11: case 0x21: case 0x31:
+	case 0x01: case 0x11: case 0x21: case 0x31:
 	{
 		uint8_t target = opcode >> 2;
 		uint16_t *pointerToTarget = get16BitRegister(target);
@@ -55,7 +57,7 @@ void CPU::executeOpCode(uint8_t opcode)
 	}
 
 	// LD (REG16), REG8
-	case 0x2: mmu_load8(registerBC.reg, registerAF.hi); break;
+	case 0x02: mmu_load8(registerBC.reg, registerAF.hi); break;
 	case 0x12: mmu_load8(registerDE.reg, registerAF.hi); break;
 	case 0x22: mmu_ldi(registerHL.reg, registerAF.hi); break;
 	case 0x32: mmu_ldd(registerHL.reg, registerAF.hi); break;
@@ -70,7 +72,7 @@ void CPU::executeOpCode(uint8_t opcode)
 	}
 
 	// LD reg8, n
-	case 0x6: case 0x16: case 0x26: case 0xE: case 0x1E: case 0x2E: case 0x3E:
+	case 0x06: case 0x16: case 0x26: case 0x0E: case 0x1E: case 0x2E: case 0x3E:
 	{
 		uint8_t target = opcode >> 3;
 		uint8_t *pointer = get8BitRegister(target);
@@ -79,7 +81,7 @@ void CPU::executeOpCode(uint8_t opcode)
 	}
 
 	// LD REG8, (REG16)
-	case 0xA: opcode_load8(registerBC.reg, registerAF.hi); break;
+	case 0x0A: opcode_load8(registerBC.reg, registerAF.hi); break;
 	case 0x1A: opcode_load8(registerDE.reg, registerAF.hi); break;
 	case 0x2A: opcode_ldi8(registerHL.reg, registerAF.hi);
 	case 0x3A: opcode_ldd8(registerHL.reg, registerAF.hi); break;
@@ -129,7 +131,7 @@ void CPU::executeOpCode(uint8_t opcode)
 
 	// INCR AND DEC
 	// INC REG16
-	case 0x3: case 0x13: case 0x23: case 0x33:
+	case 0x03: case 0x13: case 0x23: case 0x33:
 	{
 		uint8_t target = opcode >> 2;
 		uint16_t *pointerToTarget = get16BitRegister(target); 

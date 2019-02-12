@@ -1,5 +1,7 @@
+#define _CRT_SECURE_NO_DEPRECATE
 #include <iostream>
 #include <string>
+
 using namespace std;
 
 class MMU {
@@ -30,5 +32,7 @@ private:
 		void changeHiRomBank(uint8_t data);
 		void ramBankChange(uint8_t data);
 		void changeRomRamMode(uint8_t data);
+		void incrementScanLine();
+		void dmaTransfer(uint8_t data);
 
 };

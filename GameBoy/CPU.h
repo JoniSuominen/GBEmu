@@ -3,7 +3,6 @@
 #include <iostream>
 #include <bitset>
 #include <fstream>
-#define CPU_H
 #include "MMU.h"
 using namespace std;
 
@@ -28,18 +27,18 @@ private:
 	uint8_t m, t;
 
 
-	const int FLAG_Z = 7;
-	const int FLAG_N = 6;
-	const int FLAG_H = 5;
-	const int FLAG_C = 4;
+	static int FLAG_Z = 7;
+	static int FLAG_N = 6;
+	static int FLAG_H = 5;
+	static int FLAG_C = 4;
 
-	const int TIMA = 0xFF05;
-	const int TMA = 0xFF06;
-	const int TAC = 0xFF07;
+	static int TIMA = 0xFF05; // TIMER inremented by clock frequency specified by TAC register
+	static int TMA = 0xFF06; // Loaded into TIMA on TIMA overflow
+	static int TAC = 0xFF07; // Contains the timer at which TIMA should be incrementing at
 
 	bool IME = true;
 
-	const int DIVIDER = 0xFF04;
+	static int DIVIDER = 0xFF04;
 
 	int dividerRegister = 0;
 
@@ -47,8 +46,8 @@ private:
 	bool interruptsEnabled;
 
 
-	const int CLOCKSPEED = 4194304;
-	const int MAX_CYCLES = CLOCKSPEED / 60;
+	static int CLOCKSPEED = 4194304;
+	static int MAX_CYCLES = CLOCKSPEED / 60;
 
 	int TACValue = 4096;
 	int timerCounter = CLOCKSPEED / TACValue;
@@ -78,7 +77,7 @@ public:
 	void handleInterrupts();
 	void executeInterrupt(int bit);
 	int set_bit(int reg, int bit);
-	int reset_bit(int reg, int bit);
+	int reset_bit(uint8_t &reg, int bit);
 
 
 	/* opcodes */
@@ -195,6 +194,23 @@ public:
 	// SHIFTS
 	void ext_sla(uint8_t &address);
 	void ext_sra(uint8_t &address);
+	void ext_srl(uint8_t &address);
+
+	void ext_SRLHL(uint16_t pointer);
+
+	void ext_SRAHL(uint16_t pointer);
+
+	void ext_SLAHL(uint16_t pointer);
+
+	void ext_reset(int bit, uint8_t & address);
+
+	void ext_resetHL(int bit, uint16_t address);
+
+	void ext_set(int bit, uint8_t & address);
+
+	void ext_setHL(int bit, uint16_t address);
+
+
 
 	// RETURNS
 	void opcode_ret();
@@ -203,7 +219,8 @@ public:
 	
 
 	// EXTENDED OPCODE MAP
-	void test_bit(int bit, uint16_t reg);
+	void test_bit(int bit, uint8_t reg);
+	void test_bitMEM(int bit, uint16_t reg);
 	void ext_swap(uint8_t &reg);
 
 

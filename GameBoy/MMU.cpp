@@ -27,7 +27,7 @@ void MMU::writeMemory(uint16_t address, uint8_t data)
 	if (address < 0x8000) {
 		changeBanks(address, data);
 	}
-	else if (address >= 0xA000 & address < 0xC000) {
+	else if ((address >= 0xA000) & (address < 0xC000)) {
 		if (enableRam) {
 			uint16_t newAddress = address - 0xA000;
 			ramBanks[newAddress + currentRAMBank * 0x2000] = data;
@@ -43,12 +43,15 @@ void MMU::writeMemory(uint16_t address, uint8_t data)
 	}
 	else if (address == 0xFF07) {
 		uint8_t currentFreq = readMemory(0xFF07) & 0b11;
-		if (data & 0b11 != currentFreq) {
+		if ((data & 0b11 != currentFreq)) {
 			mROM[address] = data;
 		}
 	}
 	else if (address = 0xFF04) {
 			mROM[address] = 0;
+	}
+	else if (address == 0xFF46) {
+		dmaTransfer(data);
 	}
 	else {
 		mROM[address] = data;
@@ -63,6 +66,7 @@ void MMU::incrementDivider()
 
 void MMU::loadRom(const char* path)
 {
+
 	memset(cartridgeMemory, 0, sizeof(cartridgeMemory));
 	cout << path << endl;
 	FILE *in;
@@ -70,11 +74,7 @@ void MMU::loadRom(const char* path)
 	fread(cartridgeMemory, 1, 0x20000, in);
 	fclose(in);
 	currentRAMBank = 0;
-	/*
-	for (int i = 0; i < (sizeof(cartridgeMemory) / sizeof(*cartridgeMemory)); i++) {
-		cout << int( cartridgeMemory[i]) << endl;
-	}
-	*/
+
 }
 
 void MMU::init()
@@ -111,6 +111,7 @@ void MMU::init()
 	mROM[0xFF4B] = 0x00;
 	mROM[0xFFFF] = 0x00;
 	currentROMBank = 1;
+	currentRAMBank = 0;
 	switch (cartridgeMemory[0x147]) {
 		case 1: MBC1 = true; break;
 		case 2: MBC1 = true; break;
@@ -212,6 +213,19 @@ void MMU::changeRomRamMode(uint8_t data)
 	romBanking = newData == 0 ? true : false;
 	if (romBanking) {
 		currentRAMBank = 0;
+	}	
+}
+
+void MMU::incrementScanLine()
+{
+	mROM[0xFF44]++;
+}
+
+void MMU::dmaTransfer(uint8_t data)
+{
+	uint16_t address = data << 8;
+	for (int i = 0; i < 160; i++) {
+		writeMemory(0xFE00 + 1, readMemory(address + 1));
 	}
 }
 
