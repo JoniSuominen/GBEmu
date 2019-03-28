@@ -1,15 +1,22 @@
+#pragma once
 #include <unordered_map>
 #include <stdlib.h>
 #include <iostream>
 #include <bitset>
 #include <fstream>
 #include "MMU.h"
+#include <SFML/Graphics.hpp>
+#ifndef CPU_H
+#define CPU_H
 using namespace std;
+
+class GPU;
 
 class CPU
 {
 private:
 	MMU Memory;
+	GPU *gpu;
 		typedef union Register
 		{
 			// 2 byte datatype for storing hi and lo bits
@@ -23,27 +30,26 @@ private:
 		}Register;
 	Register registerAF, registerBC, registerDE, registerHL;
 	Register sp;
-	uint16_t pc;
 	uint8_t m, t;
 
 
 	static const int FLAG_Z = 7;
 	static const int FLAG_N = 6;
 	static const int FLAG_H = 5;
+	bool stop = false;
 	static const int FLAG_C = 4;
 
 	static const int TIMA = 0xFF05; // TIMER inremented by clock frequency specified by TAC register
 	static const int TMA = 0xFF06; // Loaded into TIMA on TIMA overflow
 	static const int TAC = 0xFF07; // Contains the timer at which TIMA should be incrementing at
 
-	bool IME = true;
-
+	bool IME = false;
 	static const int DIVIDER = 0xFF04;
 
 	int dividerRegister = 0;
 
 
-	bool interruptsEnabled;
+	bool interruptsEnabled = false;
 
 
 	static const int CLOCKSPEED = 4194304;
@@ -55,6 +61,8 @@ private:
 
 
 public:
+	uint16_t pc;
+	int opcodeBefore = 0;
 	void start();
 	void cycle();
 	void executeOpCode(uint8_t opcode);
@@ -78,13 +86,14 @@ public:
 	void executeInterrupt(int bit);
 	int set_bit(int reg, int bit);
 	int reset_bit(uint8_t &reg, int bit);
-
+	void extended_opcodes(uint8_t opcode);
 
 	/* opcodes */
 
 	// MISC	
+	void opcode_callNN();
+	void opcode_cb();
 	void opcode_nop();
-	void opcode_stop();
 	void opcode_cpl(uint8_t & value);
 	void opcode_bcd(uint8_t & value);
 	void opcode_scf();
@@ -95,11 +104,15 @@ public:
 	void opcode_di();
 	void opcode_ei();
 	void opcode_resetIME();
+	void opcode_ccf();
+	void opcode_pop(uint16_t &reg); 
+		void opcode_stop();
 
 	// CALLS
 	void call_false(int flag);
 	void call_true(int flag);
 	void call_nn();
+	
 
 	// PUSH
 	void push_reg16(uint16_t reg);
@@ -118,15 +131,16 @@ public:
 
 
 	// LOAD
-	void mmu_ldi(uint16_t address, uint8_t &data);
-	void mmu_ldd(uint16_t address, uint8_t &data);
+	void mmu_loadA();
+	void mmu_ldi(uint16_t &address, uint8_t &data);
+	void mmu_ldd(uint16_t &address, uint8_t data);
 	void mmu_load8(uint16_t address, uint8_t data);
 	void load8_imm(uint8_t &reg);
 	void reg16_load(uint16_t &reg);
 	void reg8_load(uint8_t & address);
 	void opcode_load8(uint16_t address, uint8_t &destination);
-	void opcode_ldi8(uint16_t address, uint8_t &destination);
-	void opcode_ldd8(uint16_t address, uint8_t &destination);
+	void opcode_ldi8(uint16_t &address, uint8_t &destination);
+	void opcode_ldd8(uint16_t &address, uint8_t &destination);
 	void opcode_mmucopy8(uint16_t mmulocation, uint8_t data);
 	void ld_reg8(uint8_t loc, uint8_t data);
 	void ldh_imm(uint8_t reg);
@@ -226,3 +240,4 @@ public:
 
 
 };
+#endif// GPU_H

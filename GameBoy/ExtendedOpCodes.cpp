@@ -15,7 +15,7 @@ void CPU::test_bit(int bit, uint8_t reg)
 	bitset(FLAG_H);
 }
 
-// BIT n, (HL)
+// BIT n, (HL)	
 void CPU::test_bitMEM(int bit, uint16_t reg)
 {
 	uint8_t loc = Memory.readMemory(reg);
@@ -27,9 +27,14 @@ void CPU::test_bitMEM(int bit, uint16_t reg)
 // SWAP B
 void CPU::ext_swap(uint8_t & reg)
 {
+	uint8_t before = reg;
 	uint8_t lower = (reg & 0x0F) << 4;
 	uint8_t higher = reg >> 4;
 	reg = (lower & higher);
+	registerAF.lo = 0;
+	if (reg == 0) {
+		bitset(FLAG_Z);
+	}
 	cycles += 8;
 }
 
@@ -108,8 +113,9 @@ void CPU::ext_srl(uint8_t & address)
 {
 	// saved to store into carry
 	int lsbData = getBit(0, address);
-	address >> 1;
-	if (address = 0) bitreset(FLAG_Z);
+	address >>= 1;
+	registerAF.lo = 0;
+	if (address == 0) bitset(FLAG_Z);
 	if (lsbData != 0) bitset(FLAG_C);
 	bitreset(FLAG_N);
 	bitreset(FLAG_H);

@@ -4,31 +4,41 @@
 // JR, N
 void CPU::jump_n()
 {
-	int8_t signedn = int8_t(Memory.readMemory(this->pc));
-	this->pc += signedn;
+	int8_t signedn = static_cast<int8_t>((Memory.readMemory(this->pc)));
+	
 	this->pc++;
-	cycles += 8;
+	this->pc += signedn;
+	cycles += 12;
 }
 // JR Z, n
 void CPU::jump_zero()
 {
-	if (getBit(FLAG_Z) == 0) {
+	if (getBit(FLAG_Z) == 1) {
 		jump_n();
+		return;
 	}
+	pc++;
+	cycles += 8;
 }
 // JR C,n
 void CPU::jump_carry()
 {
 	if (getBit(FLAG_C) == 1) {
 		jump_n();
+		return;
 	}
+	pc++;
+	cycles += 8;
 }
 // JR NZ, n
 void CPU::jump_notzero()
 {
-	if (getBit(FLAG_Z) != 0) {
+	if (getBit(FLAG_Z) == 0) {
 		jump_n();
+		return;
 	}
+	pc++;
+	cycles += 8;
 }
 
 // JR, NC
@@ -36,20 +46,24 @@ void CPU::jump_notcarry()
 {
 	if (getBit(FLAG_C) == 0) {
 		jump_n();
+		return;
 	}
+	pc++;
+	cycles += 8;
 }
 // JP nn
 void CPU::jump_abs()
 {
-	uint16_t jump = jump16();
+	uint16_t jump = readTwoBytes();
 	this->pc = jump;
-	cycles += 12;
+	cycles += 16;
 }
 	
 // JP NZ, nn etc..
 void CPU::jump_absFalse(int flag)
 {
-	if (getBit(flag) != 0) jump_abs();
+	if (getBit(flag) == 0) jump_abs();
+
 }
 // JP Z, nn etc
 void CPU::jump_absTrue(int flag)
@@ -59,23 +73,29 @@ void CPU::jump_absTrue(int flag)
 // JP (HL)
 void CPU::jump_mmu(uint16_t reg)
 {
-	uint8_t address = Memory.readMemory(reg);
-	this->pc = address;
+	this->pc = reg;
 	cycles += 4;
 }
+void CPU::mmu_loadA()
+{
+	registerAF.hi = Memory.readMemory((0xFF00) + registerBC.lo);
+	cycles += 8;
+}
 // LDI (HL), A
-void CPU::mmu_ldi(uint16_t address, uint8_t &data)
+void CPU::mmu_ldi(uint16_t &address, uint8_t &data)
 {
 	mmu_load8(address, data);
-	address += 1;
+	incr_reg(address);
+	cycles -= 8;
 	
 }
 
 // LDD (HL), A
-void CPU::mmu_ldd(uint16_t  address, uint8_t & data)
+void CPU::mmu_ldd(uint16_t &address, uint8_t  data)
 {
-	mmu_load8(address, data);
-	address -= 1;
+	Memory.writeMemory(address, data);
+	decr_reg(address);
+	cycles -= 8;
 }
 	
 // LD (BC), A
@@ -91,8 +111,26 @@ void CPU::mmu_load8(uint16_t address, uint8_t data )
 void CPU::load8_imm(uint8_t & reg)
 {
 	uint8_t data = Memory.readMemory(this->pc);
+
 	pc++;
-	reg = 0x41;
+	reg = data;
+	cycles += 8;
+}
+
+void CPU::opcode_callNN()
+{
+	uint16_t val = readTwoBytes();
+	writeToStack(this->pc);
+	this->pc = val;
+	cycles += 24;
+}
+
+void CPU::opcode_cb()
+{
+	uint8_t address = Memory.readMemory(this->pc);
+	pc++;
+	extended_opcodes(address);
+	cycles += 4;
 }
 
 // do nothing
@@ -120,16 +158,21 @@ void CPU::opcode_scf()
 // CP B
 void CPU::opcode_CP(uint8_t reg1, uint8_t reg2)
 {
-	if (reg1 - reg2 == 0) {
+	uint8_t before = reg1;
+	uint8_t ztest = reg1 - reg2;
+	registerAF.lo = 0;
+	if (ztest == 0)  {
 		bitset(FLAG_Z);
 	}
-	if ((reg1 & 0x0F) > (reg2 & 0x0F)) {
+	int16_t test = before & 0xF;
+	test -= (reg2 & 0xF);
+	if(test < 0) {
 		bitset(FLAG_H);
 	}
-
 	if (reg2 > reg1) {
 		bitset(FLAG_C);
 	}
+
 
 	bitset(FLAG_N);
 	cycles += 4;
@@ -146,9 +189,10 @@ void CPU::opcode_CPmmu(uint8_t reg1, uint16_t pointer)
 
 void CPU::enable_interrupts()
 {
-	interruptsEnabled = true;
+	IME = true;
 	cycles += 4;
 }
+
 
 void CPU::opcode_di()
 {
@@ -164,46 +208,81 @@ void CPU::opcode_ei()
 
 void CPU::opcode_resetIME()
 {
-	IME = true;
+	IME = false;
+	cycles += 4;
+}
+
+void CPU::opcode_ccf()
+{
+	if (getBit(FLAG_C)) {
+		bitreset(FLAG_C);
+	}
+	else {
+		bitset(FLAG_C);
+	}
+	bitreset(FLAG_N);
+	bitreset(FLAG_H);
 }
 
 // POP BC
+
+void CPU::opcode_pop(uint16_t &address) {
+	address = readFromStack();
+	cycles += 12;
+}
+void CPU::opcode_stop()
+{
+	stop = true;
+	cycles += 4;
+}
 void CPU::call_false(int flag)
 {
-	if (getBit(flag) != 0) {
+	if (getBit(flag) == 0) {
 		call_nn();
+		cycles += 12;
+		return;
 	}
-	
+	pc += 2;
+	cycles += 12;
 }
 
 // CALL Z, nn
 void CPU::call_true(int flag)
 {
-	if (getBit(flag) == 0) {
+	if (getBit(flag) == 1) {
 		call_nn();
+		cycles += 12;
+		return;
 	}
+	pc += 2;
+	cycles += 12;
 }
 
 // CALL nn
 void CPU::call_nn()
 {
 	uint16_t imd = readTwoBytes();
-	this->pc += 2;
 	writeToStack(pc);
-	this->pc = readTwoBytes();
-	cycles += 12;
+	if (imd == 0xC82F) {
+		cout << "Juu";
+	}
+	this->pc = imd;
+	cycles += 24;
 }
 
 // PUSH BC
 void CPU::push_reg16(uint16_t reg)
 {
+
 	writeToStack(reg);
+
 	cycles += 16;
 }
 
 // DAA
 void CPU::opcode_bcd(uint8_t & value)
 {
+
 	if (this->registerAF.hi >> FLAG_N == 0) {
 		if (this->registerAF.hi >> FLAG_C == 1 || value > 0x99) {
 			if (value + 0x6 > 0xFF) {
@@ -238,6 +317,9 @@ void CPU::opcode_bcd(uint8_t & value)
 	if (value == 0) {
 		bitset(FLAG_Z);
 	}
+	else {
+		bitreset(FLAG_Z);
+	}
 
 	bitreset(FLAG_H);
 	cycles += 4;
@@ -246,18 +328,19 @@ void CPU::opcode_bcd(uint8_t & value)
 // load A from address pointed by (BC)
 // LD A, (BC)
 void CPU::opcode_load8(uint16_t address, uint8_t &destination) {
-	destination = Memory.readMemory(address);
+	uint8_t val = Memory.readMemory(address);
+	destination = val;
 	cycles += 8;
 }
 // LDI A, (HL)
-void CPU::opcode_ldi8(uint16_t  address, uint8_t & destination)
+void CPU::opcode_ldi8(uint16_t & address, uint8_t & destination)
 {
 	opcode_load8(address, destination);
 	address++;
 }
 
 // LDD A, (HL)
-void CPU::opcode_ldd8(uint16_t  address, uint8_t & destination)
+void CPU::opcode_ldd8(uint16_t & address, uint8_t & destination)
 {
 	opcode_load8(address, destination);
 	address--;
@@ -289,7 +372,8 @@ void CPU::ldh_a(uint8_t & reg)
 {
 	uint8_t n = Memory.readMemory(this->pc);
 	pc++;
-	reg = Memory.readMemory(0xFF00 + n);
+	uint8_t val = Memory.readMemory(0xFF00 + n);
+	reg = val;
 	cycles += 12;
 }
 
@@ -309,16 +393,25 @@ void CPU::load_nnReg8(uint8_t reg)
 // LDHL SP, d
 void CPU::opcode_ldhl()
 {
-	int8_t signedInt = Memory.readMemory(this->pc);
+
+	int8_t signedInt = static_cast<int8_t>(Memory.readMemory(this->pc));
 	pc++;
 	if ((this->sp.reg & 0xFF)+ signedInt > 0xFF) {
 		bitset(FLAG_C);
+	}
+	else {
+		bitreset(FLAG_C);
 	}
 
 	if ((this->sp.reg & 0xF) + (signedInt & 0xF) > 0xF) {
 		bitset(FLAG_H);
 	}
+	else {
+		bitreset(FLAG_H);
+	}
 	registerHL.reg = signedInt + sp.reg;
+	bitreset(FLAG_Z);
+	bitreset(FLAG_N);
 	cycles += 12;
 }
 
@@ -331,6 +424,7 @@ void CPU::load_SP_HL()
 void CPU::copy_reg8(uint8_t &destination, uint8_t source)
 {
 	destination = source;
+	cycles += 4;
 }
 
 void CPU::mmu_imm(uint16_t address)
@@ -343,13 +437,10 @@ void CPU::mmu_imm(uint16_t address)
 // load immediate data from memory into 16-bit register
 // LD BC, nn
 void CPU::reg16_load(uint16_t &reg)
-{
-	uint16_t byteLo = Memory.readMemory(this->pc);
-	uint16_t byteHi = Memory.readMemory(this->pc+1);
-	uint16_t twoBytes = (byteHi << 8) | byteLo;
+	{
+	uint16_t twoBytes = readTwoBytes();
 	reg = twoBytes;
-	this->pc += 2;
-	cycles += 12;
+		cycles += 12;
 }
 
 // LD C,n
@@ -365,14 +456,19 @@ void CPU::reg8_load(uint8_t &address)
 // ADD HL, BC
 void CPU::add_16(uint16_t & destination, uint16_t source)
 {
-	bitreset(FLAG_Z);
 	if ((destination & 0x0FFF) + (source & 0x0FFF) > 0x0FFF) {
 		bitset(FLAG_H);
+	}
+	else {
+		bitreset(FLAG_H);
 	}
 	if (destination + source > 0xFFFF) {
 		bitset(FLAG_C);
 	}
-
+	else {
+		bitreset(FLAG_C);
+	}
+	bitreset(FLAG_N);
 	destination += source;
 	cycles += 8;
 }
@@ -380,17 +476,16 @@ void CPU::add_16(uint16_t & destination, uint16_t source)
 // ADD A, B
 void CPU::add_8(uint8_t value, uint8_t & destination)
 {
-	uint16_t checksum = value + destination;
+	uint8_t checksum = value + destination;
+	registerAF.lo = 0;
 	if (checksum == 0) {
 		bitset(FLAG_Z);
 	}
-	bitreset(FLAG_N);
-
 	if ((value & 0x0F) + (destination & 0x0F) > 0x0F) {
 		bitset(FLAG_H);
 	}
 
-	if (checksum > 0xFF) {
+	if ((value + destination) > 0xFF) {
 		bitset(FLAG_C);
 	}
 
@@ -402,42 +497,14 @@ void CPU::add_8(uint8_t value, uint8_t & destination)
 void CPU::add_mmu(uint16_t value, uint8_t & dest)
 {
 	uint8_t valueToSum = Memory.readMemory(value);
-	uint16_t checksum = valueToSum + dest;
-	if (checksum == 0) {
-		bitset(FLAG_Z);
-	}
-	bitreset(FLAG_N);
-
-	if ((valueToSum & 0x0F) + (dest & 0x0F) > 0x0F) {
-		bitset(FLAG_H);
-	}
-
-	if (checksum > 0xFF) {
-		bitset(FLAG_C);
-	}
-
-	dest += valueToSum;
+	add_8(valueToSum, dest);
 	cycles += 8;
 }
 // ADC A, B
 void CPU::adc_reg8(uint8_t source, uint8_t & destination)
 {
 	int carry = getBit(FLAG_C);
-	if (destination + source + carry == 0) {
-		bitset(FLAG_Z);
-	}
-
-	bitreset(FLAG_N);
-
-	if ((source & 0x0F) + (destination & 0x0F) + carry > 0x0F) {
-		bitset(FLAG_H);
-	}
-
-	if (source + destination + carry > 0xFF) {
-		bitset(FLAG_C);
-	}
-
-	destination += source + carry;
+	add_8(source + carry, destination);
 	cycles += 4;
 }
 
@@ -470,35 +537,46 @@ void CPU::add_n(uint8_t & destination)
 // ADD SP, d
 void CPU::add_signedToSP()
 {
-	int8_t signedInt = Memory.readMemory(this->pc);
+	int8_t signedInt = static_cast<int8_t>(Memory.readMemory(this->pc));
 	pc++;
 	bitreset(FLAG_Z);
 	bitreset(FLAG_N);
 	if ((this->sp.reg & 0x0FFF) + (signedInt & 0x0FFF) > 0x0FFF) {
 		bitset(FLAG_H);
 	}
+	else {
+		bitreset(FLAG_H);
+	}
 
 	if (this->sp.reg + signedInt > 0xFFFF) {
 		bitset(FLAG_C);
+	}
+	else {
+		bitreset(FLAG_C);
 	}
 	cycles += 16;
 }
 
 // SUB A, D
 void CPU::sub_reg8(uint8_t value, uint8_t & destination)
+
 {
-	if (destination - value == 0) {
+	registerAF.lo = 0;
+	uint8_t original = destination;
+	if (destination - value >= 0) {
 		bitset(FLAG_Z);
 	}
+
 	bitset(FLAG_N);
 
-	if ((destination & 0x0F) < (value & 0x0F)) {
+	if (((original & 0xF) - (value & 0xF))  < 0) {
 		bitset(FLAG_H);
 	}
 
-	if (destination - value < 0) {
+	if (destination < value) {
 		bitset(FLAG_C);
 	}
+	destination -= value;
 	cycles += 4;
 }
 
@@ -559,26 +637,29 @@ void CPU::incr_reg(uint16_t & address)
 // INC B
 void CPU::incr_reg(uint8_t & address)
 {
-	int original = address >> 2;
+	int original = address;
 	address += 1;
 	if (address == 0) {
 		bitset(FLAG_Z);
 	}
+	else {
+		bitreset(FLAG_Z);
+	}
 
-	if (original == address >> 2) {
+	if ((original & 0xF) == 0xF) {
 		bitset(FLAG_H);
 	}
+	else {
+		bitreset(FLAG_H);
+	}
+	bitreset(FLAG_N);
 	cycles += 4;
 }
 // INC (HL)
 void CPU::incp_reg(int16_t address)
 {
 	uint8_t value = Memory.readMemory(address);
-	if (value + 1 > 0xFF) {
-		bitset(FLAG_C);
-		return;
-	}
-	value++;
+	incr_reg(value);
 	Memory.writeMemory(address, value);
 	cycles += 12;
 }
@@ -589,6 +670,9 @@ void CPU::and_reg8(uint8_t value, uint8_t & destination)
 	destination &= value;
 	if (destination == 0) {
 		bitset(FLAG_Z);
+	}
+	else {
+		bitreset(FLAG_Z);
 	}
 
 	bitreset(FLAG_N);
@@ -622,12 +706,10 @@ void CPU::xor_reg8(uint8_t value, uint8_t & destination)
 {
 	destination ^= value;
 
+	registerAF.lo = 0;
 	if (destination == 0) {
 		bitset(FLAG_Z);
 	}
-	bitreset(FLAG_N);
-	bitreset(FLAG_H);
-	bitreset(FLAG_C);
 	cycles += 4;
 
 }
@@ -655,9 +737,12 @@ void CPU::xor_n(uint8_t & destination)
 void CPU::or_reg8(uint8_t value, uint8_t & destination)
 {
 	destination |= value;
-
+	
 	if (destination == 0) {
 		bitset(FLAG_Z);
+	}
+	else {
+		bitreset(FLAG_Z);
 	}
 	bitreset(FLAG_N);
 	bitreset(FLAG_H);
@@ -679,31 +764,39 @@ void CPU::or_n(uint8_t & destination)
 {
 	uint8_t data = Memory.readMemory(this->pc);
 	pc++;
-	and_reg8(data, destination);
+	or_reg8(data, destination);
 	// add extra 4 cycles for total of 8 required due to memory access
 	cycles += 4;
 
 }
-// increment 8-bit register by one
+// decrement 8-bit register by one
 // DEC B
 void CPU::decr_reg(uint8_t & address)
 {
-	int original = address >> 3;
-	address -= 1;
 
+	int original = address;
+	address -= 1;
 	if (address == 0) {
 		bitset(FLAG_Z);
 	}
+	else {
+		bitreset(FLAG_Z);
+	}
 
-	if (original == address >> 3) {
+	if ((original & 0x0F) == 0) {
 		bitset(FLAG_H);
 	}
+	else {
+		bitreset(FLAG_H);
+	}
+
+
+	bitset(FLAG_N);
 	cycles += 4;
 }
 // DEC BC
 void CPU::decr_reg(uint16_t & address)
 {
-	int original = address >> 3;
 	address -= 1;
 	cycles += 8;
 
@@ -711,12 +804,8 @@ void CPU::decr_reg(uint16_t & address)
 // DEC (HL)
 void CPU::decp_reg(uint16_t value)
 {
-	uint8_t newValue = Memory.readMemory(value);
-	if (newValue == 0) {
-		bitset(FLAG_C);
-		return;
-	}
-	newValue--;
+	uint8_t newValue = Memory.readMemory(value);	
+	decr_reg(newValue);
 	Memory.writeMemory(value, newValue);
 	cycles += 12;
 }
@@ -726,22 +815,26 @@ void CPU::restart(uint8_t n)
 	this->pc = n;
 	cycles += 32;
 }
-/* Rotate left with carry
-   RLC A
+/* Rotate left through carry
+   RLA
 */
-void CPU::rlc_reg8(uint8_t &address)
+void CPU::rl_reg8(uint8_t &address)
 {
 	uint8_t original = address;
+	uint8_t oldCarry = getBit(FLAG_C);
 	address <<= 1;
-	uint8_t lsb = original >> 7;
-	address |= lsb;
-	cout << std::bitset<8>(address) << endl;
-	bitset(FLAG_C, lsb);
+	uint8_t msb = getBit(7, original);
+	registerAF.lo = 0;
+	if (msb) {
+		bitset(FLAG_C);
+	}
+
+	if (oldCarry) {
+		address = set_bit(address, 0);
+	}
 	if (address == 0) {
 		bitset(FLAG_Z);
 	}
-
-
 	cycles += 8;
 }
 
@@ -753,16 +846,22 @@ void CPU::rrc_reg8(uint8_t & address)
 	uint8_t original = address;
 	address = original >> 1;
 	uint8_t lsb = original & 0b00000001;
-	if (lsb == 1) {
-		address |= (0b00000001 << 7);
+
+	if (lsb) {
+		bitset(FLAG_C);
+		address = set_bit(address, 7);
 	}
 	else {
-		address	&= ~(1U << 7);
+		bitreset(FLAG_C);
 	}
 
-	bitset(FLAG_C, lsb);
+
+
 	if (address == 0) {
 		bitset(FLAG_Z);
+	}
+	else {
+		bitreset(FLAG_Z);
 	}
 	bitreset(FLAG_N);
 	bitreset(FLAG_H);
@@ -772,48 +871,54 @@ void CPU::rrc_reg8(uint8_t & address)
 
 // Rotate A left, documentation says this is the same exact opcode as RLC, A: unsure if this should get implemented?
 // RL, A
-void CPU::rl_reg8(uint8_t & address)
+void CPU::rlc_reg8(uint8_t & address)
 {
-	address <<= 1;
-	uint8_t bitSeven = address >> 7;
 	uint8_t carry = getBit(FLAG_C);
-	address |= carry;
-	if (bitSeven == 1) {
+	uint8_t bitSeven = getBit(7, address);
+	registerAF.lo = 0;
+	address <<= 1;
+	if (bitSeven) {
 		bitset(FLAG_C);
 	}
-	else {
-		bitreset(FLAG_C);
+
+	if (carry) {
+		address = set_bit(address, 0);
 	}
+
 	if (address == 0) {
 		bitset(FLAG_Z);
 	}
 
-	bitreset(FLAG_N);
-	bitreset(FLAG_H);
+
 	cycles += 4;
 }
 // RR A
 void CPU::rr_reg8(uint8_t & address)
 {
 	uint8_t original = address;
+	uint8_t bitZero = getBit(0, address);
 	address >>= 1;
 	uint8_t carry = getBit(FLAG_C);
-	uint8_t bitZero = address |= 0x1;
-	bitset(FLAG_C, bitZero);
-	address |= (carry << 7);
+	registerAF.lo = 0;
+
+	if (bitZero) {
+		bitset(FLAG_C);
+	}
 
 	if (address == 0) {
 		bitset(FLAG_Z);
 	}
-	bitreset(FLAG_N);
-	bitreset(FLAG_H);
+
+	if (carry) {
+		address = set_bit(address, 7);
+	}
 }
 
 // RET
 void CPU::opcode_ret()
 {
 	this->pc = readFromStack();
-	cycles += 8;
+	cycles += 16;
 }
 
 // RET Z
@@ -821,7 +926,10 @@ void CPU::opcode_retFalse(int flag)
 {
 	if (getBit(flag) == 0) {
 		opcode_ret();
+		cycles += 4;
+		return;
 	}
+	cycles += 8;
 }
 
 // RET NZ
@@ -829,7 +937,10 @@ void CPU::opcode_retTrue(int flag)
 {
 	if (getBit(flag)) {
 		opcode_ret();
+		cycles += 4;
+		return;
 	}
+	cycles += 8;
 }
 
 

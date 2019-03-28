@@ -6,7 +6,8 @@
 using namespace std;
 
 
-uint8_t MMU::readMemory(uint16_t address) {
+	uint8_t MMU::readMemory(uint16_t address) {
+
 	// reading from from rom memory bank
 	if ((address >= 0x4000) && (address <= 0x7FFF)) {
 		uint16_t newAddress = address - 0x4000;
@@ -24,6 +25,16 @@ uint8_t MMU::readMemory(uint16_t address) {
 
 void MMU::writeMemory(uint16_t address, uint8_t data)
 {
+	
+	//if (address == 0xD804) {
+	//	cout << "muisti" << endl;
+	//}
+	if (address == 0x104) {
+		cout << "erasetaan" << endl;
+	}
+	if (address == 0xFF02 && data == 0x81) {
+		cout << hex << readMemory(0xFF01);
+	}
 	if (address < 0x8000) {
 		changeBanks(address, data);
 	}
@@ -47,8 +58,11 @@ void MMU::writeMemory(uint16_t address, uint8_t data)
 			mROM[address] = data;
 		}
 	}
-	else if (address = 0xFF04) {
+	else if (address == 0xFF04) {
 			mROM[address] = 0;
+	}
+	else if (address == 0xFF44) {
+		mROM[address] = 0;
 	}
 	else if (address == 0xFF46) {
 		dmaTransfer(data);
@@ -72,13 +86,22 @@ void MMU::loadRom(const char* path)
 	FILE *in;
 	in = fopen(path, "rb");
 	fread(cartridgeMemory, 1, 0x20000, in);
+	FILE *in2;
+	in2 = fopen("D:\\GBEmu\\GBEmu\\bootrom.gb", "rb");
+	fread(cartridgeMemory, 1, 0x256, in2);
 	fclose(in);
+	fclose(in2);
+	memcpy(mROM, cartridgeMemory, 0x8000);
+
 	currentRAMBank = 0;
+
 
 }
 
 void MMU::init()
 {
+	
+	
 	mROM[0xFF05] = 0x00;
 	mROM[0xFF06] = 0x00;
 	mROM[0xFF07] = 0x00;
@@ -100,9 +123,10 @@ void MMU::init()
 	mROM[0xFF24] = 0x77;
 	mROM[0xFF25] = 0xF3;
 	mROM[0xFF26] = 0xF1;
-	mROM[0xFF40] = 0x91;
+	mROM[0xFF40] = 0x00;
 	mROM[0xFF42] = 0x00;
 	mROM[0xFF43] = 0x00;
+	mROM[0xFF44] = 0x90;
 	mROM[0xFF45] = 0x00;
 	mROM[0xFF47] = 0xFC;
 	mROM[0xFF48] = 0xFF;
@@ -110,6 +134,57 @@ void MMU::init()
 	mROM[0xFF4A] = 0x00;
 	mROM[0xFF4B] = 0x00;
 	mROM[0xFFFF] = 0x00;
+	
+	// nintendo logo
+	mROM[0x104] = 0xCE;
+	mROM[0x105] = 0xED;
+	mROM[0x106] = 0x66;
+	mROM[0x107] = 0x66;
+	mROM[0x108] = 0xCC;
+	mROM[0x109] = 0x0D;
+	mROM[0x10A] = 0x00;
+	mROM[0x10B] = 0x0B;
+	mROM[0x10C] = 0x03;
+	mROM[0x10D] = 0x73;
+	mROM[0x10E] = 0x00;
+	mROM[0x10F] = 0x83;
+	mROM[0x110] = 0x00;
+	mROM[0x111] = 0x0C;
+	mROM[0x112] = 0x00;
+	mROM[0x113] = 0x0D;
+	mROM[0x114] = 0x00;
+	mROM[0x115] = 0x08;
+	mROM[0x116] = 0x11;
+	mROM[0x117] = 0x1F;
+	mROM[0x118] = 0x88;
+	mROM[0x119] = 0x89;
+	mROM[0x11A] = 0x00;
+	mROM[0x11B] = 0x0E;
+	mROM[0x11C] = 0xDC;
+	mROM[0x11D] = 0xCC;
+	mROM[0x11E] = 0x6E;
+	mROM[0x11F] = 0xE6;
+	mROM[0x120] = 0xDD;
+	mROM[0x121] = 0xDD;
+	mROM[0x122] = 0xD9;
+	mROM[0x123] = 0x99;
+	mROM[0x124] = 0xBB;
+	mROM[0x125] = 0xBB;
+	mROM[0x126] = 0x67;
+	mROM[0x127] = 0x63;
+	mROM[0x128] = 0x6E;
+	mROM[0x129] = 0x0E;
+	mROM[0x12A] = 0xEC;
+	mROM[0x12B] = 0xCC;
+	mROM[0x12C] = 0xDD;
+	mROM[0x12D] = 0xDC;
+	mROM[0x12E] = 0x99;
+	mROM[0x12F] = 0x9F;
+	mROM[0x130] = 0xBB;
+	mROM[0x131] = 0xB9;
+	mROM[0x132] = 0x33;
+	mROM[0x133] = 0x3E;
+	cout <<  "Muistissa 0xFF40: " << mROM[0xFF40] << endl;
 	currentROMBank = 1;
 	currentRAMBank = 0;
 	switch (cartridgeMemory[0x147]) {

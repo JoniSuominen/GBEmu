@@ -1,9 +1,11 @@
 Debug
 GameBoy.sln
 GameBoy/Debug/*
+GameBoy/x64/*
 .vs/GameBoy/v15
 GameBoy.vcxproj
 GameBoy.vcxproj.filters
 GameBoy.vcxproj.user
 test.gb
 .vs
+sml.gb
