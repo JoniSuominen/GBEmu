@@ -10,3 +10,5 @@ test.gb
 .vs
 sml.gb
 *.gb
+GameBoy/.vs
+Gameboy/*.dll

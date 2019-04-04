@@ -125,7 +125,7 @@ void CPU::cycle() {
 		// 11. loopilla kirjoittaa väärin rekisteriin FF80
 		// C2B1, C50F, C630
 		// C2B1 yksitoista kertaa -> bugaa
-		if (pc == 0xC2B1) {
+		if (pc == 0xDEFA) {
 			cout << "juu";
 		}
 		// 02CD KEY MAPPING RIKKI
