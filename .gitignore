@@ -9,3 +9,4 @@ GameBoy.vcxproj.user
 test.gb
 .vs
 sml.gb
+*.gb
