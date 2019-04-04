@@ -1,6 +1,5 @@
 #include "CPU.h"
 #include "GPU.h"
-#include <SDL.h>
 using namespace std;
 
 
@@ -42,7 +41,7 @@ sf::View getLetterboxView(sf::View view, int windowWidth, int windowHeight) {
 
 void CPU::start()
 {
-	Memory.loadRom("D:\\GBEmu\\GBEmu\\load.gb");
+	Memory.loadRom("D:\\GameBoy\\GBEmu\\04-op r,imm.gb");
 	init();
 	sf::RenderWindow window(sf::VideoMode(160, 144, 32), "GBEmu");
 	sf::Clock timer;
@@ -62,7 +61,6 @@ void CPU::start()
 	while (window.isOpen()) {
 
 		sf::Event event;
-				if (!stop)
 					cycle();
 				//sf::Time time = timer.getElapsedTime();
 				//if (time.asMilliseconds() > rate) {
@@ -114,20 +112,24 @@ void CPU::cycle() {
 		// C262
 		// C632
 		// C507
-		if (pc == 0x100) {
+
+  	 		uint8_t opcode = Memory.readMemory(this->pc);
+			pc++;
+				executeOpCode(opcode);
+		if (pc == 0xC100) {
 			registerAF.reg = 0x1180;
-			registerBC.reg = 0;
+			registerBC.reg = 0x0;
 			registerDE.reg = 0xFF56;
 			registerHL.reg = 0xD;
 		}
-		if (pc == 0xC47E && registerAF.reg == 0xD640 && registerDE.reg == 0xa3e9) {
+		// 11. loopilla kirjoittaa väärin rekisteriin FF80
+		// C2B1, C50F, C630
+		// C2B1 yksitoista kertaa -> bugaa
+		if (pc == 0xC2B1) {
 			cout << "juu";
 		}
-		
-	 		uint8_t opcode = Memory.readMemory(this->pc);
-			pc++;
-		executeOpCode(opcode);
-				int opcodeCycles = cycles - cyclesBefore;
+		// 02CD KEY MAPPING RIKKI
+					int opcodeCycles = cycles - cyclesBefore;
 					updateTimers(opcodeCycles);
 				handleInterrupts();
 					gpu->update(opcodeCycles);
@@ -219,7 +221,7 @@ void CPU::init()
 	gpu = new GPU();
 	gpu->cpu = this;
 	
-	pc = 0x000;
+	pc = 0x100;
 	registerAF.reg = 0x01B0;
 	registerBC.reg = 0x0013;
 	registerDE.reg = 0x00D8;

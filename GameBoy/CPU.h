@@ -37,6 +37,7 @@ private:
 	static const int FLAG_N = 6;
 	static const int FLAG_H = 5;
 	bool stop = false;
+	bool halt = false;
 	static const int FLAG_C = 4;
 
 	static const int TIMA = 0xFF05; // TIMER inremented by clock frequency specified by TAC register
@@ -107,6 +108,7 @@ public:
 	void opcode_ccf();
 	void opcode_pop(uint16_t &reg); 
 		void opcode_stop();
+		void opcode_halt();
 
 	// CALLS
 	void call_false(int flag);

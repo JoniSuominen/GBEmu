@@ -62,13 +62,23 @@ void CPU::jump_abs()
 // JP NZ, nn etc..
 void CPU::jump_absFalse(int flag)
 {
-	if (getBit(flag) == 0) jump_abs();
+	if (getBit(flag) == 0) {
+		jump_abs(); 
+		return;
+	}
+	pc += 2;
 
 }
 // JP Z, nn etc
 void CPU::jump_absTrue(int flag)
 {
-	if (getBit(flag)) jump_abs();
+
+
+	if (getBit(flag)) {
+		jump_abs(); return;
+		
+	}
+	pc += 2;
 }
 // JP (HL)
 void CPU::jump_mmu(uint16_t reg)
@@ -86,16 +96,14 @@ void CPU::mmu_ldi(uint16_t &address, uint8_t &data)
 {
 	mmu_load8(address, data);
 	incr_reg(address);
-	cycles -= 8;
 	
 }
 
 // LDD (HL), A
 void CPU::mmu_ldd(uint16_t &address, uint8_t  data)
 {
-	Memory.writeMemory(address, data);
+	mmu_load8(address, data);
 	decr_reg(address);
-	cycles -= 8;
 }
 	
 // LD (BC), A
@@ -235,6 +243,11 @@ void CPU::opcode_stop()
 	stop = true;
 	cycles += 4;
 }
+void CPU::opcode_halt()
+{
+	halt = true;
+
+}
 void CPU::call_false(int flag)
 {
 	if (getBit(flag) == 0) {
@@ -263,9 +276,6 @@ void CPU::call_nn()
 {
 	uint16_t imd = readTwoBytes();
 	writeToStack(pc);
-	if (imd == 0xC82F) {
-		cout << "Juu";
-	}
 	this->pc = imd;
 	cycles += 24;
 }
@@ -474,8 +484,7 @@ void CPU::add_16(uint16_t & destination, uint16_t source)
 }
 
 // ADD A, B
-void CPU::add_8(uint8_t value, uint8_t & destination)
-{
+/*
 	uint8_t checksum = value + destination;
 	registerAF.lo = 0;
 	if (checksum == 0) {
@@ -490,6 +499,27 @@ void CPU::add_8(uint8_t value, uint8_t & destination)
 	}
 
 	destination += value;
+	cycles += 4;
+
+*/
+void CPU::add_8(uint8_t value, uint8_t & destination)
+{
+
+	uint8_t before = destination;
+	destination += value;
+	registerAF.lo = 0;
+	if (destination == 0) {
+		bitset(FLAG_Z);
+	}
+	uint16_t sum = (before & 0xF) + (value & 0xf);
+	if (sum > 0xF) {
+		bitset(FLAG_H);
+	}
+
+	if ((before + value) > 0xFF) {
+		bitset(FLAG_C);
+	}
+
 	cycles += 4;
 }
 
@@ -569,7 +599,7 @@ void CPU::sub_reg8(uint8_t value, uint8_t & destination)
 
 	bitset(FLAG_N);
 
-	if (((original & 0xF) - (value & 0xF))  < 0) {
+	if ((value & 0xf) > (original &0xf)) {
 		bitset(FLAG_H);
 	}
 
@@ -845,7 +875,7 @@ void CPU::rrc_reg8(uint8_t & address)
 {
 	uint8_t original = address;
 	address = original >> 1;
-	uint8_t lsb = original & 0b00000001;
+	uint8_t lsb = getBit(0, original);
 
 	if (lsb) {
 		bitset(FLAG_C);
@@ -879,9 +909,6 @@ void CPU::rlc_reg8(uint8_t & address)
 	address <<= 1;
 	if (bitSeven) {
 		bitset(FLAG_C);
-	}
-
-	if (carry) {
 		address = set_bit(address, 0);
 	}
 

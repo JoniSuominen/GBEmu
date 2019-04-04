@@ -26,11 +26,19 @@ using namespace std;
 void MMU::writeMemory(uint16_t address, uint8_t data)
 {
 	
-	//if (address == 0xD804) {
-	//	cout << "muisti" << endl;
-	//}
-	if (address == 0x104) {
-		cout << "erasetaan" << endl;
+	if (address == 0xFF00) {
+		 uint8_t bit4 = (data >> 4) & 0b00000001;
+		 uint8_t bit5 = (data >> 5) & 0b00000001;
+
+		 uint8_t reg = mROM[0xFF00];
+		 reg |= (bit4 << 4);
+		 reg |= (bit5 << 5);
+
+		 mROM[0xFF00] = reg;
+		 return;
+	}
+	if (address == 0xD804) {
+		cout << "juu";
 	}
 	if (address == 0xFF02 && data == 0x81) {
 		cout << hex << readMemory(0xFF01);
@@ -87,10 +95,10 @@ void MMU::loadRom(const char* path)
 	in = fopen(path, "rb");
 	fread(cartridgeMemory, 1, 0x20000, in);
 	FILE *in2;
-	in2 = fopen("D:\\GBEmu\\GBEmu\\bootrom.gb", "rb");
-	fread(cartridgeMemory, 1, 0x256, in2);
+	in2 = fopen("D:\\GameBoy\\GBEmu\\bootrom.gb", "rb");
+	//fread(cartridgeMemory, 1, 0x256, in2);
 	fclose(in);
-	fclose(in2);
+	//fclose(in2);
 	memcpy(mROM, cartridgeMemory, 0x8000);
 
 	currentRAMBank = 0;
@@ -101,7 +109,7 @@ void MMU::loadRom(const char* path)
 void MMU::init()
 {
 	
-	
+	mROM[0xFF00] = 0xCF;
 	mROM[0xFF05] = 0x00;
 	mROM[0xFF06] = 0x00;
 	mROM[0xFF07] = 0x00;

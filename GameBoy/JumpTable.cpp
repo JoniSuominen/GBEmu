@@ -72,6 +72,11 @@ void CPU::executeOpCode(uint8_t opcode)
 	case 0x2F: opcode_cpl(registerAF.hi); break;
 	case 0xEF: restart(0x28); break;
 	case 0xDF: restart(0x18); break;
+	case 0xD9: opcode_ret(); opcode_ei(); break;
+	case 0xD2: jump_absFalse(FLAG_C); break;
+	case 0xD7: restart(0x10); break;
+	case 0x76: opcode_halt(); break;
+	case 0xC0:	opcode_retFalse(FLAG_Z); break;
 
 	case 0xBE: opcode_CP(registerAF.hi, Memory.readMemory(registerHL.reg)); cycles += 4; break;
 	case 0x1f: rr_reg8(registerAF.hi); break;
@@ -160,7 +165,6 @@ void CPU::executeOpCode(uint8_t opcode)
 	case 0x56: opcode_load8(registerHL.reg, registerDE.hi); break;
 	case 0x66: opcode_load8(registerHL.reg, registerHL.hi); break;
 	// LDH
-	case 0xF2: mmu_loadA(); break;
 	case 0xE0: ldh_imm(registerAF.hi); break;
 	case 0xF0: ldh_a(registerAF.hi); break;
 	case 0xE2: mmu_load8(0xFF00 + registerBC.lo, registerAF.hi);   break;
@@ -220,6 +224,7 @@ void CPU::executeOpCode(uint8_t opcode)
 	case 0x35: decp_reg(registerHL.reg); break;
 
 	case 0xC3: jump_abs(); break;
+	case 0xCA: jump_absTrue(FLAG_Z); break;
 
 	// ADD AND SUBSTRACT
 
@@ -256,7 +261,6 @@ void CPU::executeOpCode(uint8_t opcode)
 	// ADC IMM
 	case 0x8E: adc_imm(registerHL.reg, registerAF.hi); break;
 	case 0xCE: adc_n(registerAF.hi); break;
-	case 0xFC: break;
 
 	// SUB REG8
 	case 0x90: case 0x91: case 0x92: case 0x93: case 0x94: case 0x95: case 0x97:
@@ -349,6 +353,7 @@ void CPU::executeOpCode(uint8_t opcode)
 
 	default: {
 		cout << "\nUNIMPLEMENTED INSTRUCTION: " << hex << static_cast<int>(opcode) << endl;
+		cout << "PC: " << pc - 1 << endl;
 	}
 
 	}
@@ -381,6 +386,14 @@ void CPU::extended_opcodes(uint8_t opcode) {
 		bitset(FLAG_H);
 		cycles += 8;
 		break;
+	}
+
+	case 0x87: {
+		registerAF.hi = (registerAF.hi, 0); break;
+	}
+
+	case 0xFD: {
+		registerHL.lo = set_bit(registerHL.lo, 7); break;
 	}
 
 	case 0x38: {
