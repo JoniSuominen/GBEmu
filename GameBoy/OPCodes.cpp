@@ -75,7 +75,8 @@ void CPU::jump_absTrue(int flag)
 
 
 	if (getBit(flag)) {
-		jump_abs(); return;
+		jump_abs(); 
+		return;
 		
 	}
 	pc += 2;
@@ -391,6 +392,7 @@ void CPU::ldh_a(uint8_t & reg)
 void CPU::load_SP()
 {
 	writeRegToMemory(sp);
+	
 	cycles += 20;
 }
 // LD (nn), A
@@ -591,9 +593,10 @@ void CPU::add_signedToSP()
 void CPU::sub_reg8(uint8_t value, uint8_t & destination)
 
 {
+
 	registerAF.lo = 0;
 	uint8_t original = destination;
-	if (destination - value >= 0) {
+	if (destination - value == 0) {
 		bitset(FLAG_Z);
 	}
 
@@ -900,22 +903,19 @@ void CPU::rrc_reg8(uint8_t & address)
 }
 
 // Rotate A left, documentation says this is the same exact opcode as RLC, A: unsure if this should get implemented?
-// RL, A
+// RLC, A
 void CPU::rlc_reg8(uint8_t & address)
 {
-	uint8_t carry = getBit(FLAG_C);
 	uint8_t bitSeven = getBit(7, address);
 	registerAF.lo = 0;
 	address <<= 1;
 	if (bitSeven) {
 		bitset(FLAG_C);
-		address = set_bit(address, 0);
 	}
 
 	if (address == 0) {
 		bitset(FLAG_Z);
 	}
-
 
 	cycles += 4;
 }
@@ -924,8 +924,8 @@ void CPU::rr_reg8(uint8_t & address)
 {
 	uint8_t original = address;
 	uint8_t bitZero = getBit(0, address);
-	address >>= 1;
 	uint8_t carry = getBit(FLAG_C);
+	address >>= 1;
 	registerAF.lo = 0;
 
 	if (bitZero) {
