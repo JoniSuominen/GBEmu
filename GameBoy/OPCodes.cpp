@@ -511,8 +511,8 @@ void CPU::add_8(uint8_t value, uint8_t & destination)
 	if (destination == 0) {
 		bitset(FLAG_Z);
 	}
-	uint16_t sum = (before & 0xF) + (value & 0xf);
-	if (sum > 0xF) {
+	uint16_t sum = (before & 0xF);
+	if (sum + (value & 0xF) > 0xF) {
 		bitset(FLAG_H);
 	}
 

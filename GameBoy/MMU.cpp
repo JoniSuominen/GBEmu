@@ -38,7 +38,7 @@ void MMU::writeMemory(uint16_t address, uint8_t data)
 		 return;
 	}
 	if (address == 0xD804) {
-		cout << "juu";
+	//	cout << "juu";
 	}
 	if (address == 0xFF02 && data == 0x81) {
 		cout << hex << readMemory(0xFF01);

@@ -41,7 +41,7 @@ sf::View getLetterboxView(sf::View view, int windowWidth, int windowHeight) {
 
 void CPU::start()
 {
-	Memory.loadRom("D:\\GameBoy\\GBEmu\\04-op r,imm.gb");
+	Memory.loadRom("D:\\GameBoy\\GBEmu\\09-op r,r.gb");
 	init();
 	sf::RenderWindow window(sf::VideoMode(160, 144, 32), "GBEmu");
 	sf::Clock timer;
@@ -103,6 +103,12 @@ void CPU::cycle() {
 	int cyclesBefore = 0;
 	timerCounter = CLOCKSPEED / 1024;
 	while (this->cycles < MAX_CYCLES) {
+		if (pc == 0x100) {
+			registerAF.reg = 0x1180;
+			registerBC.reg = 0x0;
+			registerDE.reg = 0xFF56;
+			registerHL.reg = 0xD;
+		}
 		// 0xC24C-0xC24F välillä bugi
 		// C876,C813, C0A8, C06A, C8E1, CC50
 		//if (pc == 0xC0C6){
@@ -116,18 +122,10 @@ void CPU::cycle() {
   	 		uint8_t opcode = Memory.readMemory(this->pc);
 			pc++;
 				executeOpCode(opcode);
-		if (pc == 0xC100) {
-			registerAF.reg = 0x1180;
-			registerBC.reg = 0x0;
-			registerDE.reg = 0xFF56;
-			registerHL.reg = 0xD;
-		}
 		// 11. loopilla kirjoittaa väärin rekisteriin FF80
 		// C2B1, C50F, C630
 		// C2B1 yksitoista kertaa -> bugaa
-		if (pc == 0xDEFA) {
-			cout << "juu";
-		}
+		// C632 Bugi!!!!
 		// 02CD KEY MAPPING RIKKI
 					int opcodeCycles = cycles - cyclesBefore;
 					updateTimers(opcodeCycles);
