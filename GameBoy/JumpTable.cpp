@@ -56,7 +56,7 @@ void CPU::executeOpCode(uint8_t opcode)
 	case 0xC9: opcode_ret(); break;
 	case 0x3F: opcode_ccf(); break;
 	case 0xFF: restart(0x38); break;
-	case 0xF1: opcode_pop(registerAF.reg); break;
+	case 0xF1: opcode_pop(registerAF.reg); registerAF.lo &= 0xF0; break;
 	case 0xCB: opcode_cb(); break;
 	case 0xCD: opcode_callNN(); break;
 	case 0xC4: call_false(FLAG_Z); break;
@@ -77,6 +77,8 @@ void CPU::executeOpCode(uint8_t opcode)
 	case 0xD7: restart(0x10); break;
 	case 0x76: opcode_halt(); break;
 	case 0xC0:	opcode_retFalse(FLAG_Z); break;
+
+	case 0xC7: restart(0x0); break;
 	case 0xC2: jump_absFalse(FLAG_Z); break;
 	case 0x37: opcode_scf(); break;
 
@@ -124,6 +126,7 @@ void CPU::executeOpCode(uint8_t opcode)
 	// LD reg8, n
 	case 0x06: case 0x16: case 0x26: case 0x0E: case 0x1E: case 0x2E: case 0x3E:
 	{
+		
 		uint8_t target = opcode >> 3;
 		uint8_t *pointer = get8BitRegister(target);
 		load8_imm(*pointer);
@@ -179,14 +182,21 @@ void CPU::executeOpCode(uint8_t opcode)
 
 
 
-	// INCR AND DEC
-	// INC REG16
-	case 0x03: case 0x13: case 0x23: case 0x33:
-	{
-		uint8_t target = opcode >> 2;
-		uint16_t *pointerToTarget = get16BitRegister(target); 
-		incr_reg(*pointerToTarget);
+
+	case 0x03: {
+		incr_reg(registerBC.reg);
 		break;
+	}
+	case 0x13: {
+		incr_reg(registerDE.reg);
+		break;
+	}
+	case 0x23: {
+		incr_reg(registerHL.reg);
+		break;
+	}
+	case 0x33: {
+		incr_reg(sp.reg); break;
 	}
 
 	case 0x34: incp_reg(registerHL.reg); break;
@@ -258,7 +268,7 @@ void CPU::executeOpCode(uint8_t opcode)
 		uint8_t *pointerToRegister = get8BitRegister(target);
 		adc_reg8(*pointerToRegister, registerAF.hi);
 		break;
-	}
+	}	
 
 	// ADC IMM
 	case 0x8E: adc_imm(registerHL.reg, registerAF.hi); break;
@@ -337,7 +347,7 @@ void CPU::executeOpCode(uint8_t opcode)
 
 	// PUSH
 	case 0xC5: push_reg16(registerBC.reg); break;
-	case 0xF5 : push_reg16(registerAF.reg); break;
+	case 0xF5: push_reg16(registerAF.reg); break;
 	case 0xE5: push_reg16(registerHL.reg); break;
 	case 0xD5: push_reg16(registerDE.reg); break;
 	// POP
