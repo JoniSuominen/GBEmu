@@ -58,9 +58,9 @@ void CPU::start()
 	view = getLetterboxView(view, 160, 144);
 	int rate = 1000 / 60;
 	cout << time << endl;
+	sf::Event event;
 	while (window.isOpen()) {
-
-		sf::Event event;
+		window.pollEvent(event);
 					cycle();
 				//sf::Time time = timer.getElapsedTime();
 				//if (time.asMilliseconds() > rate) {
@@ -85,17 +85,104 @@ void CPU::start()
 					window.setView(view);
 					window.draw(sprite);
 					window.display();
-
-					window.pollEvent(event);
-					//timer.restart();
-				
-
-			
+					if (event.type == sf::Event::KeyPressed) {
+						if (event.key.code == sf::Keyboard::Z) {
+							handleKeyboard(4);
+						}
+						else if (event.key.code == sf::Keyboard::X) {
+							handleKeyboard(5);
+						} 
+						else if (event.key.code == sf::Keyboard::Return) {
+							handleKeyboard(7);
+						}
+						else if (event.key.code == sf::Keyboard::Space) {
+							handleKeyboard(6);
+						}
+						else if (event.key.code == sf::Keyboard::Right) {
+							handleKeyboard(0);
+						}
+						else if (event.key.code == sf::Keyboard::Left) {
+							handleKeyboard(1);
+						}
+						else if (event.key.code == sf::Keyboard::Up) {
+							handleKeyboard(2);
+						}
+						else if (event.key.code == sf::Keyboard::Down) {
+							handleKeyboard(3);
+						}
+						
+					}
+					else if (event.type == sf::Event::KeyReleased) {
+						if (event.key.code == sf::Keyboard::Z) {
+							handleRelease(4);
+						}
+						else if (event.key.code == sf::Keyboard::X) {
+							handleRelease(5);
+						}
+						else if (event.key.code == sf::Keyboard::Return) {
+							handleRelease(7);
+						}
+						else if (event.key.code == sf::Keyboard::Space) {
+							handleRelease(6);
+						}
+						else if (event.key.code == sf::Keyboard::Right) {
+							handleRelease(0);
+						}
+						else if (event.key.code == sf::Keyboard::Left) {
+							handleRelease(1);
+						}
+						else if (event.key.code == sf::Keyboard::Up) {
+							handleRelease(2);
+						}
+						else if (event.key.code == sf::Keyboard::Down) {
+							handleRelease(3);
+						}
+					}
+					//timer.restart()	
 		}
 		
 	
 
 	
+}
+void CPU::handleKeyboard(int key)
+{
+	bool unset = false;
+	keys = Memory.getKey();
+	if (getBit(keys, key) == 0) {
+		unset = true;
+	}
+	keys = reset_bit(keys, key);
+	Memory.setKey(keys);
+	bool button = true;
+	if (key > 3) {
+		button = true;
+	}
+	else {
+		button = false;
+	}
+	uint8_t keyRegister = Memory.readMemory(0xFF00);
+
+	bool reqInterupt = false;
+	if (button && !getBit(5, keyRegister)) {
+		reqInterupt = true;
+	}
+
+	else if (!button && !getBit(4, keyRegister)) {
+		reqInterupt = true;
+	}
+
+	if (reqInterupt && !unset) {
+		setInterrupt(4);
+	}
+
+}
+
+void CPU::handleRelease(int key)
+{
+	keys = Memory.getKey();
+	keys = set_bit(keys, key);
+	Memory.setKey(keys);
 }
 
 // main emulation loop
@@ -127,6 +214,9 @@ void CPU::cycle() {
 		// C2B1 yksitoista kertaa -> bugaa
 		// C632 Bugi!!!!
 		// 02CD KEY MAPPING RIKKI
+		if (pc == 0xC505 ) {
+			cout << "Juu";
+		}
 					int opcodeCycles = cycles - cyclesBefore;
 					updateTimers(opcodeCycles);
 				handleInterrupts();

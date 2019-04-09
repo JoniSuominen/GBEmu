@@ -12,12 +12,14 @@ class MMU {
 		uint8_t cartridgeMemory[0x20000];
 		uint8_t mROM[65536] = { 0 };
 		uint8_t ramBanks[0x8000] = { 0 };
+		uint8_t keys = 0x3F;
 		bool MBC1 = false;
 		bool MBC2 = false;
 		bool enableRam = false;	
 		bool romBanking = true;
 		uint8_t currentROMBank = 1;
 		uint8_t currentRAMBank;
+		uint8_t getJoyPadState();
 	 // all the mapped memory together equals 65kB.
 
 
@@ -35,5 +37,7 @@ class MMU {
 		void changeRomRamMode(uint8_t data);
 		void incrementScanLine();
 		void dmaTransfer(uint8_t data);
+		uint8_t getKey();
+		void setKey(uint8_t key);
 
 };

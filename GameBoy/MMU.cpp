@@ -6,12 +6,33 @@
 using namespace std;
 
 
-	uint8_t MMU::readMemory(uint16_t address) {
+uint8_t MMU::getJoyPadState()
+{
+
+	uint8_t res = mROM[0xFF00];
+	cout << res << endl;
+	if (!(res >> 4) & 0b00000001) {
+		uint8_t topJoyPad = keys >> 4;
+		topJoyPad |= 0xF0;
+		res &= topJoyPad;
+	}
+	else {
+		uint8_t bottomJoyPad = keys & 0xF;
+		bottomJoyPad |= 0xF0;
+		res &= bottomJoyPad;
+	}
+	return res;
+}
+
+uint8_t MMU::readMemory(uint16_t address) {
 
 	// reading from from rom memory bank
 	if ((address >= 0x4000) && (address <= 0x7FFF)) {
 		uint16_t newAddress = address - 0x4000;
 		return cartridgeMemory[newAddress + currentROMBank * 0x4000];
+	}
+	else if (address == 0xFF00) {
+		return getJoyPadState();
 	}
 	// reading from ram memory bank
 	else if ((address >= 0xA000) && (address <= 0xBFFF)) {
@@ -142,6 +163,7 @@ void MMU::init()
 	mROM[0xFF4A] = 0x00;
 	mROM[0xFF4B] = 0x00;
 	mROM[0xFFFF] = 0x00;
+	mROM[0xFF4D] = 0x7E;
 	
 	// nintendo logo
 	mROM[0x104] = 0xCE;
@@ -310,5 +332,15 @@ void MMU::dmaTransfer(uint8_t data)
 	for (int i = 0; i < 160; i++) {
 		writeMemory(0xFE00 + 1, readMemory(address + 1));
 	}
+}
+
+uint8_t MMU::getKey()
+{
+	return keys;
+}
+
+void MMU::setKey(uint8_t key)
+{
+	keys = key;
 }
 

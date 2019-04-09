@@ -12,3 +12,5 @@ sml.gb
 *.gb
 GameBoy/.vs
 Gameboy/*.dll
+*.gb
+tests/*

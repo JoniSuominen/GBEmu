@@ -32,7 +32,7 @@ private:
 	Register sp;
 	uint8_t m, t;
 
-
+	uint8_t keys;
 	static const int FLAG_Z = 7;
 	static const int FLAG_N = 6;
 	static const int FLAG_H = 5;
@@ -59,6 +59,9 @@ private:
 	int TACValue = 4096;
 	int timerCounter = CLOCKSPEED / TACValue;
 	int cycles = 0;
+	void handleKeyboard(int key);
+	void handleRelease(int key);
+
 
 
 public:
