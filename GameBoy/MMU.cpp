@@ -116,7 +116,7 @@ void MMU::loadRom(const char* path)
 	in = fopen(path, "rb");
 	fread(cartridgeMemory, 1, 0x20000, in);
 	FILE *in2;
-	in2 = fopen("D:\\GameBoy\\GBEmu\\bootrom.gb", "rb");
+	in2 = fopen("D:\\GameBoy\\GBEmu\\tests\\bootrom.gb", "rb");
 	//fread(cartridgeMemory, 1, 0x256, in2);
 	fclose(in);
 	//fclose(in2);

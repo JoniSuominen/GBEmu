@@ -14,3 +14,5 @@ GameBoy/.vs
 Gameboy/*.dll
 *.gb
 tests/*
+*.dll
+Gameboy/*.gb
