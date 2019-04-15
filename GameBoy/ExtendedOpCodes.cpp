@@ -30,7 +30,8 @@ void CPU::ext_swap(uint8_t & reg)
 	uint8_t before = reg;
 	uint8_t lower = (reg & 0x0F) << 4;
 	uint8_t higher = reg >> 4;
-	reg = (lower & higher);
+	uint8_t res = lower | higher;
+	reg = res;
 	registerAF.lo = 0;
 	if (reg == 0) {
 		bitset(FLAG_Z);
@@ -83,29 +84,31 @@ void CPU::ext_sla(uint8_t & address)
 {
 	int msb = address >> 7;
 	address <<= 1;
+	registerAF.lo = 0;
 	bitset(FLAG_C, msb);
 	bitreset(FLAG_N);
 	bitreset(FLAG_H);
 	if (address == 0) {
 		bitset(FLAG_Z);
 	}
-
-	address = set_bit(address, msb);
 }
 
 // SRA
 void CPU::ext_sra(uint8_t & address)
 {
+	int lsb = address & 0b1;
 	int msb = address >> 7;
 	address >>= 1;
-	bitset(FLAG_C, msb);
+	if (msb) {
+		address = set_bit(address, 7);
+	}
+	registerAF.lo = 0;
+	bitset(FLAG_C, lsb);
 	bitreset(FLAG_N);
 	bitreset(FLAG_H);
 	if (address == 0) {
 		bitset(FLAG_Z);
 	}
-
-	address = set_bit(address, msb);
 }
 
 // SRL
@@ -114,6 +117,7 @@ void CPU::ext_srl(uint8_t & address)
 	// saved to store into carry
 	int lsbData = getBit(0, address);
 	address >>= 1;
+	address = reset_bit(address, 7);
 	registerAF.lo = 0;
 	if (address == 0) bitset(FLAG_Z);
 	if (lsbData != 0) bitset(FLAG_C);
@@ -177,6 +181,36 @@ void CPU::ext_setHL(int bit, uint16_t address)
 	uint8_t loc = Memory.readMemory(address);
 	ext_set(bit, loc);
 	Memory.writeMemory(address, loc);
+	cycles += 8;
+}
+
+void CPU::ext_testBit(uint8_t reg, int bit)
+{
+	uint8_t res = getBit(bit, reg);
+	if (res == 1) {
+		bitreset(FLAG_Z);
+	}
+	else {
+		bitset(FLAG_Z);
+	}
+	bitreset(FLAG_N);
+	bitset(FLAG_H);
+	cycles += 8;
+}
+
+void CPU::ext_resetBitHL(int bit)
+{
+	uint8_t data = Memory.readMemory(registerHL.reg);
+	data = reset_bit(data, bit);
+	Memory.writeMemory(registerHL.reg, data);
+	cycles += 8;
+}
+
+void CPU::ext_setBitHL(int bit)
+{
+	uint8_t data = Memory.readMemory(registerHL.reg);
+	data = set_bit(data, bit);
+	Memory.writeMemory(registerHL.reg, data);
 	cycles += 8;
 }
 

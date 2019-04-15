@@ -44,7 +44,7 @@ private:
 	static const int TMA = 0xFF06; // Loaded into TIMA on TIMA overflow
 	static const int TAC = 0xFF07; // Contains the timer at which TIMA should be incrementing at
 
-	bool IME = false;
+	bool IME = true;
 	static const int DIVIDER = 0xFF04;
 
 	int dividerRegister = 0;
@@ -229,7 +229,10 @@ public:
 
 	void ext_setHL(int bit, uint16_t address);
 
-
+	// ext bit
+	void ext_testBit(uint8_t reg, int bit);
+	void ext_resetBitHL(int bit);
+	void ext_setBitHL(int bit);
 
 	// RETURNS
 	void opcode_ret();

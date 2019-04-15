@@ -41,7 +41,7 @@ sf::View getLetterboxView(sf::View view, int windowWidth, int windowHeight) {
 
 void CPU::start()
 {
-	Memory.loadRom("D:\\GameBoy\\GBEmu\\Dr.mario.gb");
+	Memory.loadRom("D:\\GameBoy\\GBEmu\\flappyboy.gb");
 	init();
 	sf::RenderWindow window(sf::VideoMode(160, 144, 32), "GBEmu");
 	sf::Clock timer;
@@ -196,30 +196,35 @@ void CPU::cycle() {
 			registerDE.reg = 0xFF56;
 			registerHL.reg = 0xD;
 		}
-		// 0xC24C-0xC24F välillä bugi
-		// C876,C813, C0A8, C06A, C8E1, CC50
-		//if (pc == 0xC0C6){
-				//cout << " juu";
-		//}
-		// TO DO: korjaa VRAM	C8D8
-		// C262
-		// C632
-		// C507
+
 
   	 		uint8_t opcode = Memory.readMemory(this->pc);
 			pc++;
-				executeOpCode(opcode);
-		// 11. loopilla kirjoittaa väärin rekisteriin FF80
-		// C2B1, C50F, C630
-		// C2B1 yksitoista kertaa -> bugaa
-		// C632 Bugi!!!!
-		// 02CD KEY MAPPING RIKKI
-		if (pc == 0xC505 ) {
-			cout << "Juu";
+					executeOpCode(opcode);
+		// op r, (hl) 19 kertaa!!!
+		if (pc == 0x100) {
+			cout << "";
 		}
-					int opcodeCycles = cycles - cyclesBefore;
-					updateTimers(opcodeCycles);
-				handleInterrupts();
+		if (pc == 0x021B) {
+			cout << "";
+		}
+		if (pc == 0x02A8) {
+			cout << "";
+		}
+		if (pc == 0xC17F) {
+			cout << "";
+		}
+		if (pc == 0xC701) {
+			cout << "";
+		}
+		
+		int opcodeCycles = cycles - cyclesBefore;
+		if (Memory.timerChanged) {
+			timerCounter = getNewClockFreq();
+			Memory.timerChanged = false;
+		}
+		updateTimers(opcodeCycles);
+	handleInterrupts();
 					gpu->update(opcodeCycles);
 		//gpu->update(opcodeCycles);
 		cyclesBefore = cycles;
@@ -280,7 +285,6 @@ void CPU::writeToStack(uint16_t data)
 void CPU::writeRegToMemory(Register reg)
 {
 	uint16_t nn = readTwoBytes();
-	this->pc += 2;
 	Memory.writeMemory(nn, reg.lo);
 	nn++;
 	Memory.writeMemory(nn, reg.hi);
@@ -413,7 +417,7 @@ void CPU::setInterrupt(int bit)
 {
 	uint8_t reg = Memory.readMemory(0xFF0F);
 	reg = set_bit(reg, bit);
-	Memory.writeMemory(0xFF0F, bit);
+	Memory.writeInterruptState(reg);
 }
 
 /*
@@ -446,7 +450,7 @@ void CPU::executeInterrupt(int bit)
 	IME = false;
 	uint8_t reg = Memory.readMemory(0xFF0F);
 	reg = reset_bit(reg, bit);
-	Memory.writeMemory(0xFF0F, reg);
+	Memory.writeInterruptState(reg);
 	writeToStack(pc);
 	switch (bit)
 	{

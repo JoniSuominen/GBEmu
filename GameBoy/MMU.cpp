@@ -10,7 +10,6 @@ uint8_t MMU::getJoyPadState()
 {
 
 	uint8_t res = mROM[0xFF00];
-	cout << res << endl;
 	if (!(res >> 4) & 0b00000001) {
 		uint8_t topJoyPad = keys >> 4;
 		topJoyPad |= 0xF0;
@@ -24,6 +23,11 @@ uint8_t MMU::getJoyPadState()
 	return res;
 }
 
+void MMU::writeInterruptState(uint8_t data)
+{
+	interruptflags = data;
+}
+
 uint8_t MMU::readMemory(uint16_t address) {
 
 	// reading from from rom memory bank
@@ -33,6 +37,10 @@ uint8_t MMU::readMemory(uint16_t address) {
 	}
 	else if (address == 0xFF00) {
 		return getJoyPadState();
+	}
+	else if (address == 0xFF0F) {
+		// ei toimi
+		return interruptflags;
 	}
 	// reading from ram memory bank
 	else if ((address >= 0xA000) && (address <= 0xBFFF)) {
@@ -46,7 +54,9 @@ uint8_t MMU::readMemory(uint16_t address) {
 
 void MMU::writeMemory(uint16_t address, uint8_t data)
 {
-	
+	if (address == 0xFF0F) {
+		return;
+	}
 	if (address == 0xFF00) {
 		 uint8_t bit4 = (data >> 4) & 0b00000001;
 		 uint8_t bit5 = (data >> 5) & 0b00000001;
@@ -57,6 +67,11 @@ void MMU::writeMemory(uint16_t address, uint8_t data)
 
 		 mROM[0xFF00] = reg;
 		 return;
+	}
+	if (address == 0xFF80) {
+		if (data == 0x89) {
+			//cout << "juu";
+		}
 	}
 	if (address == 0xD804) {
 	//	cout << "juu";
@@ -80,6 +95,14 @@ void MMU::writeMemory(uint16_t address, uint8_t data)
 	}
 	else if (address >= 0xFEA0 && address < 0xFEFF) {
 		return;
+	}
+	else if (address == 0xFF07 ) {
+		uint8_t freq = readMemory(0xFF07) & 0x3;
+		mROM[0xFF07] = data;
+		uint8_t newFreq = readMemory(0xFF07) & 0x3;
+		if (freq != newFreq) {
+			timerChanged = true;
+		}
 	}
 	else if (address == 0xFF07) {
 		uint8_t currentFreq = readMemory(0xFF07) & 0b11;

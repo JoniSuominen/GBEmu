@@ -20,10 +20,13 @@ class MMU {
 		uint8_t currentROMBank = 1;
 		uint8_t currentRAMBank;
 		uint8_t getJoyPadState();
+		uint8_t interruptflags = 0;
 	 // all the mapped memory together equals 65kB.
 
 
 	public:
+		void writeInterruptState(uint8_t data);
+		bool timerChanged = false;
 		uint8_t readMemory(uint16_t address);
 		void writeMemory(uint16_t address, uint8_t data);
 		void incrementDivider();

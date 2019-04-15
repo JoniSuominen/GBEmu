@@ -293,7 +293,7 @@ void CPU::push_reg16(uint16_t reg)
 // DAA
 void CPU::opcode_bcd(uint8_t & value)
 {
-
+/*
 	if (this->registerAF.hi >> FLAG_N == 0) {
 		if (this->registerAF.hi >> FLAG_C == 1 || value > 0x99) {
 			if (value + 0x6 > 0xFF) {
@@ -332,6 +332,18 @@ void CPU::opcode_bcd(uint8_t & value)
 		bitreset(FLAG_Z);
 	}
 
+	bitreset(FLAG_H);
+	cycles += 4;
+	*/
+	if (!getBit(FLAG_N)) {
+		if (getBit(FLAG_C) || value > 0x99) { value += 0x60; bitset(FLAG_C); }
+		if (getBit(FLAG_H) || (value & 0x0F) > 0x09) { value += 0x6; }
+	}
+	else {
+		if (getBit(FLAG_C)) { value -= 0x60;}
+		if (getBit(FLAG_H)) { value -= 0x6; }
+	}
+	registerAF.lo == 0 ? bitset(FLAG_Z) : bitreset(FLAG_Z);
 	bitreset(FLAG_H);
 	cycles += 4;
 }
@@ -513,8 +525,7 @@ void CPU::add_8(uint8_t value, uint8_t & destination)
 	if (destination == 0) {
 		bitset(FLAG_Z);
 	}
-	uint16_t sum = (before & 0xF);
-	if (sum + (value & 0xF) > 0xF) {
+	if ((before & 0x0f) + (value &0x0F) > 0x0f) {
 		bitset(FLAG_H);
 	}
 
@@ -536,7 +547,20 @@ void CPU::add_mmu(uint16_t value, uint8_t & dest)
 void CPU::adc_reg8(uint8_t source, uint8_t & destination)
 {
 	int carry = getBit(FLAG_C);
-	add_8(source + carry, destination);
+	uint8_t before = destination;
+	destination += source;
+	destination += carry;
+	registerAF.lo = 0;
+	if (destination == 0) {
+		bitset(FLAG_Z);
+	}
+	if ((before & 0x0f) + (source & 0x0F) + carry > 0x0f) {
+		bitset(FLAG_H);
+	}
+
+	if ((before + source + carry) > 0xFF) {
+		bitset(FLAG_C);
+	}
 	cycles += 4;
 }
 
@@ -625,8 +649,8 @@ void CPU::sub_mmu(uint16_t value, uint8_t & destination)
 // SBC A, (HL)
 void CPU::sbc_imm(uint16_t pointer, uint8_t & destination)
 {
-	uint8_t value = Memory.readMemory(pointer) + getBit(FLAG_C);
-	sub_reg8(value, destination);
+	uint8_t value = Memory.readMemory(pointer);
+	sbc_reg8(value, destination);
 	// add extra 4 cycles for total of 8 required due to memory access
 	cycles += 4;
 }
@@ -644,8 +668,25 @@ void CPU::sbc_n(uint8_t & destination)
 // SBC A, B
 void CPU::sbc_reg8(uint8_t data, uint8_t & destination)
 {
-	uint8_t value = data + getBit(FLAG_C);
-	sub_reg8(value, destination);
+	uint8_t carry = getBit(FLAG_C);
+	uint8_t value = data + carry;
+	registerAF.lo = 0;
+	uint8_t original = destination;
+	if (destination - value == 0) {
+		bitset(FLAG_Z);
+	}
+
+	bitset(FLAG_N);
+
+	if ((data & 0xf) + carry > (original & 0xf)) {
+		bitset(FLAG_H);
+	}
+
+	int dest = destination;
+	if ((dest - (data + carry)) < 0) {
+		bitset(FLAG_C);
+	}
+	destination -= value;
 }
 
 // SUB A, n
@@ -865,9 +906,6 @@ void CPU::rl_reg8(uint8_t &address)
 	if (oldCarry) {
 		address = set_bit(address, 0);
 	}
-	if (address == 0) {
-		bitset(FLAG_Z);
-	}
 	cycles += 8;
 }
 
@@ -879,7 +917,7 @@ void CPU::rrc_reg8(uint8_t & address)
 	uint8_t original = address;
 	address = original >> 1;
 	uint8_t lsb = getBit(0, original);
-
+	registerAF.lo = 0;
 	if (lsb) {
 		bitset(FLAG_C);
 		address = set_bit(address, 7);
@@ -889,15 +927,6 @@ void CPU::rrc_reg8(uint8_t & address)
 	}
 
 
-
-	if (address == 0) {
-		bitset(FLAG_Z);
-	}
-	else {
-		bitreset(FLAG_Z);
-	}
-	bitreset(FLAG_N);
-	bitreset(FLAG_H);
 
 	cycles += 8;
 }
@@ -911,10 +940,7 @@ void CPU::rlc_reg8(uint8_t & address)
 	address <<= 1;
 	if (bitSeven) {
 		bitset(FLAG_C);
-	}
-
-	if (address == 0) {
-		bitset(FLAG_Z);
+		address = set_bit(address, 0);
 	}
 
 	cycles += 4;
@@ -930,10 +956,6 @@ void CPU::rr_reg8(uint8_t & address)
 
 	if (bitZero) {
 		bitset(FLAG_C);
-	}
-
-	if (address == 0) {
-		bitset(FLAG_Z);
 	}
 
 	if (carry) {
