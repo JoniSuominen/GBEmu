@@ -3,6 +3,10 @@
 A GameBoy emulator written in C++ currently in making.
 
 # TODO
-* Research SDL
-* Research graphics output of GameBoy
-* Finish Jump Table / Extended Op Codes
+* FIX DAA
+* FIX KEYPAD
+* FIX INTERRUPTS(?)
+
+# COMPLETE
+* Somewhat runs Super Mario Land and Tetris, boots Dr.Mario to load screen
+* Passes most load instruction tests
