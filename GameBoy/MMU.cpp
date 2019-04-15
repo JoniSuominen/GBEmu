@@ -10,15 +10,16 @@ uint8_t MMU::getJoyPadState()
 {
 
 	uint8_t res = mROM[0xFF00];
-	if (!(res >> 4) & 0b00000001) {
-		uint8_t topJoyPad = keys >> 4;
-		topJoyPad |= 0xF0;
-		res &= topJoyPad;
-	}
-	else {
-		uint8_t bottomJoyPad = keys & 0xF;
+	if (!((res >> 4) & 0b00000001)) {
+		uint8_t bottomJoyPad = keys >> 4;
 		bottomJoyPad |= 0xF0;
 		res &= bottomJoyPad;
+
+	}
+	else {
+		uint8_t topJoyPad = keys & 0xF;
+		topJoyPad |= 0xF0;
+		res &= topJoyPad;
 	}
 	return res;
 }
@@ -60,10 +61,19 @@ void MMU::writeMemory(uint16_t address, uint8_t data)
 	if (address == 0xFF00) {
 		 uint8_t bit4 = (data >> 4) & 0b00000001;
 		 uint8_t bit5 = (data >> 5) & 0b00000001;
-
 		 uint8_t reg = mROM[0xFF00];
-		 reg |= (bit4 << 4);
-		 reg |= (bit5 << 5);
+		 if (bit4) {
+			 reg &= ~(1U << 4);
+		 }
+		 else {
+			 reg |= (1U << 4);
+		 }
+		 if (bit5) {
+			 reg &= ~(1U << 5);
+		 }
+		 else {
+			 reg |= (1U << 5);
+		 }
 
 		 mROM[0xFF00] = reg;
 		 return;

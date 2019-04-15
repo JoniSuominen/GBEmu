@@ -12,7 +12,7 @@ class MMU {
 		uint8_t cartridgeMemory[0x20000];
 		uint8_t mROM[65536] = { 0 };
 		uint8_t ramBanks[0x8000] = { 0 };
-		uint8_t keys = 0x3F;
+		uint8_t keys = 0xFF;
 		bool MBC1 = false;
 		bool MBC2 = false;
 		bool enableRam = false;	

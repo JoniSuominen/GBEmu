@@ -41,7 +41,7 @@ sf::View getLetterboxView(sf::View view, int windowWidth, int windowHeight) {
 
 void CPU::start()
 {
-	Memory.loadRom("D:\\GameBoy\\GBEmu\\flappyboy.gb");
+	Memory.loadRom("D:\\GameBoy\\GBEmu\\sml.gb");
 	init();
 	sf::RenderWindow window(sf::VideoMode(160, 144, 32), "GBEmu");
 	sf::Clock timer;
@@ -95,7 +95,7 @@ void CPU::start()
 						else if (event.key.code == sf::Keyboard::Return) {
 							handleKeyboard(7);
 						}
-						else if (event.key.code == sf::Keyboard::Space) {
+						else if (event.key.code == sf::Keyboard::Escape) {
 							handleKeyboard(6);
 						}
 						else if (event.key.code == sf::Keyboard::Right) {
