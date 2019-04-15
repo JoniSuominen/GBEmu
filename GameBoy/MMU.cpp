@@ -34,7 +34,7 @@ uint8_t MMU::readMemory(uint16_t address) {
 	// reading from from rom memory bank
 	if ((address >= 0x4000) && (address <= 0x7FFF)) {
 		uint16_t newAddress = address - 0x4000;
-		return cartridgeMemory[newAddress + currentROMBank * 0x4000];
+		return cartridgeMemory[newAddress + (currentROMBank * 0x4000)];
 	}
 	else if (address == 0xFF00) {
 		return getJoyPadState();
@@ -316,8 +316,8 @@ void MMU::changeLowRamBank(uint8_t data)
 		return;
 	}
 
-	uint8_t lowerFive = data & 0b00011111;
-	currentROMBank &= 0b11100000;
+	uint8_t lowerFive = data & 31;
+	currentROMBank &= 224;
 	currentROMBank |= lowerFive;
 	// ROM BANK cant be 0 as that equals the bank in 0x0000 - 0x4000
 	if (currentROMBank == 0) {
@@ -363,7 +363,7 @@ void MMU::dmaTransfer(uint8_t data)
 {
 	uint16_t address = data << 8;
 	for (int i = 0; i < 160; i++) {
-		writeMemory(0xFE00 + 1, readMemory(address + 1));
+		writeMemory(0xFE00 + i, readMemory(address + i));
 	}
 }
 

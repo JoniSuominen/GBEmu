@@ -343,7 +343,7 @@ void CPU::opcode_bcd(uint8_t & value)
 		if (getBit(FLAG_C)) { value -= 0x60;}
 		if (getBit(FLAG_H)) { value -= 0x6; }
 	}
-	registerAF.lo == 0 ? bitset(FLAG_Z) : bitreset(FLAG_Z);
+	registerAF.hi == 0 ? bitset(FLAG_Z) : bitreset(FLAG_Z);
 	bitreset(FLAG_H);
 	cycles += 4;
 }

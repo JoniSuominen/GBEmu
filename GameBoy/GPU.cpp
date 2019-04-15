@@ -162,7 +162,9 @@ void GPU::renderSprites()
 				uint16_t paletteAddress = cpu->getBit(4, attributes) ? 0xFF49 : 0xFF48;
 				uint8_t color = getColor(colorNum, paletteAddress);
 
-
+				if (color == 0) {
+					continue;
+				}
 
 
 				int xPix = 0 - tilePixel;
@@ -171,7 +173,8 @@ void GPU::renderSprites()
 				int pixel = positionX + xPix;
 
 
-				if ((scanLine < 0) || scanLine > 144 || (pixel < 0) || pixel > 40) {
+				if ((scanLine < 0) || (scanLine > 143) || (pixel < 0) || (pixel > 159))
+				{
 					continue;
 				}
 

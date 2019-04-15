@@ -41,7 +41,7 @@ sf::View getLetterboxView(sf::View view, int windowWidth, int windowHeight) {
 
 void CPU::start()
 {
-	Memory.loadRom("D:\\GameBoy\\GBEmu\\sml.gb");
+	Memory.loadRom("D:\\GameBoy\\GBEmu\\Tetris.gb");
 	init();
 	sf::RenderWindow window(sf::VideoMode(160, 144, 32), "GBEmu");
 	sf::Clock timer;
@@ -202,7 +202,7 @@ void CPU::cycle() {
 			pc++;
 					executeOpCode(opcode);
 		// op r, (hl) 19 kertaa!!!
-		if (pc == 0x100) {
+		if (pc == 0x0061) {
 			cout << "";
 		}
 		if (pc == 0x021B) {
@@ -214,7 +214,7 @@ void CPU::cycle() {
 		if (pc == 0xC17F) {
 			cout << "";
 		}
-		if (pc == 0xC701) {
+		if (pc == 0xC092) {
 			cout << "";
 		}
 		
