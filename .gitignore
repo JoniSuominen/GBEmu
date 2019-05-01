@@ -16,3 +16,5 @@ Gameboy/*.dll
 tests/*
 *.dll
 Gameboy/*.gb
+cp
+cpu_instrs/*
