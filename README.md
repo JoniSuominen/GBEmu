@@ -65,13 +65,9 @@ You must pass the absolute path of the rom as a command line arguement
 
 See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
 
-## License
-
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
-
 ## Acknowledgments
 
-* reddit.com/r/emudev
+* http://reddit.com/r/emudev
 * http://bgb.bircd.org/pandocs.htm
 * http://www.codeslinger.co.uk/pages/projects/gameboy.html
 * http://imrannazar.com/GameBoy-Emulation-in-JavaScript:-The-CPU
