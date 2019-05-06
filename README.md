@@ -61,7 +61,7 @@ You must pass the absolute path of the rom as a command line arguement
 
 ## Authors
 
-* **Joni Suominen** - *Initial work* - [Joni Suominen](https://github.com/Joni Suominen)
+* **Joni Suominen** - *Initial work* - [Joni Suominen](https://github.com/JoniSuominen)
 
 See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
 
