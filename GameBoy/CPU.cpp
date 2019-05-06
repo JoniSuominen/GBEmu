@@ -39,9 +39,9 @@ sf::View getLetterboxView(sf::View view, int windowWidth, int windowHeight) {
 	return view;
 }
 
-void CPU::start()
+void CPU::start(const char * path)
 {
-	Memory.loadRom("D:\\GameBoy\\GBEmu\\sml.gb");
+	Memory.loadRom(path);
 	init();
 	sf::RenderWindow window(sf::VideoMode(160, 144, 32), "GBEmu");
 	sf::Clock timer;

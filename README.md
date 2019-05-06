@@ -1,12 +1,77 @@
-# GBEmu
+# GameBoy Emulator
 
-A GameBoy emulator written in C++ currently in making.
+GameBoy emulator written in C++ using SFML graphics library.
+Cabable of running Tetris and Super Mario Land currently.
 
-# TODO
-* FIX DAA
-* FIX KEYPAD
-* FIX INTERRUPTS(?)
+## Getting Started
 
-# COMPLETE
-* Somewhat runs Super Mario Land and Tetris, boots Dr.Mario to load screen
-* Passes most load instruction tests
+Check instructions below for setting up the project on your local machine
+
+### Prerequisites
+
+To get started clone the project from this repository and install
+development environment of your choise.
+
+```
+git clone https://github.com/JoniSuominen/GBEmu.git
+```
+
+### Installing
+
+Clone the repository into your computer if you already haven't: 
+
+```
+git clone https://github.com/JoniSuominen/GBEmu.git
+```
+
+Download SFML for your development environment of choise: 
+```
+https://www.sfml-dev.org/download/sfml/2.5.1/
+```
+
+Download SFML for your development environment of choise: 
+```
+https://www.sfml-dev.org/download/sfml/2.5.1/
+```
+
+Setup SFML with development environment of choise: 
+```
+https://www.sfml-dev.org/tutorials/2.5/
+```
+
+## Blargg's tests
+
+Blargg's tests check how well the emulator matches
+with the original GameBoy by checking return values of
+cpu instructions and timings of operations.
+The tests can be found on internet but I will not provide
+links for them.
+
+## Running roms
+You must pass the absolute path of the rom as a command line arguement
+```
+./main.out "ROM PATH"
+```
+
+
+## Built With
+
+* [SFML](https://www.sfml-dev.org/learn.php) - C++ graphics library
+. 
+
+## Authors
+
+* **Joni Suominen** - *Initial work* - [Joni Suominen](https://github.com/Joni Suominen)
+
+See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+
+## Acknowledgments
+
+* reddit.com/r/emudev
+* http://bgb.bircd.org/pandocs.htm
+* http://www.codeslinger.co.uk/pages/projects/gameboy.html
+* http://imrannazar.com/GameBoy-Emulation-in-JavaScript:-The-CPU

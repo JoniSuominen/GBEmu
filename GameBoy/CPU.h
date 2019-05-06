@@ -5,6 +5,7 @@
 #include <bitset>
 #include <fstream>
 #include "MMU.h"
+#include <string>
 #include <SFML/Graphics.hpp>
 #ifndef CPU_H
 #define CPU_H
@@ -67,7 +68,7 @@ private:
 public:
 	uint16_t pc;
 	int opcodeBefore = 0;
-	void start();
+	void start(const char * path);
 	void cycle();
 	void executeOpCode(uint8_t opcode);
 	void bitset(int flag);

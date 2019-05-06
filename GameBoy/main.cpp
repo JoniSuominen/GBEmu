@@ -4,7 +4,7 @@
 
 using namespace std;
 
-int main() {
+int main(int argc, char *argv[]) {
 	union Register
 	{
 		// 2 byte datatype for storing hi and lo bits
@@ -20,7 +20,7 @@ int main() {
 
 	CPU cpu;
 	cpu.init();
-	cpu.start();
+	cpu.start(argv[1]);
 	system("pause");
 	
 	
