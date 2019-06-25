@@ -194,6 +194,9 @@ void CPU::cycle() {
 			registerHL.reg = 0xD;
 		}
 
+		// TIMERI ONGELMIA
+		if (pc == 0xC2C9)
+			cout << "";
 
   	 		uint8_t opcode = Memory.readMemory(this->pc);
 			pc++;
@@ -359,8 +362,10 @@ void CPU::updateTimers(int cycles)
 {
 	// check whether clock is enabled - decides whether we can update TIMA
 
-	bool clockEnabled = getBit(Memory.readMemory(TAC), 2) ? true : false;
-
+	bool clockEnabled = getBit(2, Memory.readMemory(TAC)) ? true : false;
+	if (clockEnabled) {
+		cout << "juu" << endl;
+	}
 	// update divider register
 	dividerRegister += cycles;
 	if (dividerRegister >= 255) {
@@ -414,7 +419,7 @@ void CPU::setInterrupt(int bit)
 {
 	uint8_t reg = Memory.readMemory(0xFF0F);
 	reg = set_bit(reg, bit);
-	Memory.writeInterruptState(reg);
+	Memory.writeMemory(0xFF0F, reg);
 }
 
 /*

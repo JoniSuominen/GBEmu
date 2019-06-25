@@ -28,7 +28,7 @@ void CPU::executeOpCode(uint8_t opcode)
 	case 0x3F: opcode_ccf(); break;
 	case 0xFF: restart(0x38); break;
 	case 0xF1: opcode_pop(registerAF.reg); registerAF.lo &= 0xF0; break;
-	case 0xCB: opcode_cb(); break;
+	case 0xCB: opcode_cb(); break;	
 	case 0xCD: opcode_callNN(); break;
 	case 0xC4: call_false(FLAG_Z); break;
 	case 0xCC: call_true(FLAG_Z); break;
@@ -149,6 +149,7 @@ void CPU::executeOpCode(uint8_t opcode)
 	case 0xE0: ldh_imm(registerAF.hi); break;
 	case 0xF0: ldh_a(registerAF.hi); break;
 	case 0xE2: mmu_load8(0xFF00 + registerBC.lo, registerAF.hi);   break;
+	case 0xF2: opcode_load8(0xFF00 + registerBC.lo, registerAF.hi); break;
 
 	case 0xEA: load_nnReg8(registerAF.hi); break;
 	case 0xF8: opcode_ldhl(); break;

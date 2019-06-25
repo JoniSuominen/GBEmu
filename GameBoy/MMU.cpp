@@ -55,9 +55,8 @@ uint8_t MMU::readMemory(uint16_t address) {
 
 void MMU::writeMemory(uint16_t address, uint8_t data)
 {
-	if (address == 0xFF0F) {
-		return;
-	}
+
+
 	if (address == 0xFF00) {
 		 uint8_t bit4 = (data >> 4) & 0b00000001;
 		 uint8_t bit5 = (data >> 5) & 0b00000001;
@@ -106,16 +105,8 @@ void MMU::writeMemory(uint16_t address, uint8_t data)
 	else if (address >= 0xFEA0 && address < 0xFEFF) {
 		return;
 	}
-	else if (address == 0xFF07 ) {
-		uint8_t freq = readMemory(0xFF07) & 0x3;
-		mROM[0xFF07] = data;
-		uint8_t newFreq = readMemory(0xFF07) & 0x3;
-		if (freq != newFreq) {
-			timerChanged = true;
-		}
-	}
 	else if (address == 0xFF07) {
-		uint8_t currentFreq = readMemory(0xFF07) & 0b11;
+		uint8_t currentFreq = readMemory(0xFF07) & 0x3;
 		if ((data & 0b11 != currentFreq)) {
 			mROM[address] = data;
 		}
@@ -166,7 +157,7 @@ void MMU::init()
 	mROM[0xFF00] = 0xCF;
 	mROM[0xFF05] = 0x00;
 	mROM[0xFF06] = 0x00;
-	mROM[0xFF07] = 0x00;
+	mROM[0xFF07] = 0xF8;
 	mROM[0xFF10] = 0x80;
 	mROM[0xFF11] = 0xBF;
 	mROM[0xFF12] = 0xF3;
@@ -197,6 +188,7 @@ void MMU::init()
 	mROM[0xFF4B] = 0x00;
 	mROM[0xFFFF] = 0x00;
 	mROM[0xFF4D] = 0x7E;
+	mROM[0xFF0F] = 0xE1;
 	
 	// nintendo logo
 	mROM[0x104] = 0xCE;

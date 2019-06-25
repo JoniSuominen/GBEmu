@@ -45,7 +45,7 @@ private:
 	static const int TMA = 0xFF06; // Loaded into TIMA on TIMA overflow
 	static const int TAC = 0xFF07; // Contains the timer at which TIMA should be incrementing at
 
-	bool IME = true;
+	bool IME = false;
 	static const int DIVIDER = 0xFF04;
 
 	int dividerRegister = 0;

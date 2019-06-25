@@ -420,7 +420,7 @@ void CPU::opcode_ldhl()
 
 	int8_t signedInt = static_cast<int8_t>(Memory.readMemory(this->pc));
 	pc++;
-	if ((this->sp.reg & 0xFF)+ signedInt > 0xFF) {
+	if (this->sp.reg + signedInt > 0xFF) {
 		bitset(FLAG_C);
 	}
 	else {
