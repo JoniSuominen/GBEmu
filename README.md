@@ -1,7 +1,7 @@
 # GameBoy Emulator
 ![Super Mario Land](https://i.imgur.com/XoIT385.gif)
 GameBoy emulator written in C++ using SFML graphics library.
-Cabable of running Tetris and Super Mario Land currently.
+Capable of running Tetris and Super Mario Land currently.
 
 ## Getting Started
 
@@ -58,6 +58,9 @@ You must pass the absolute path of the rom as a command line arguement
 
 * [SFML](https://www.sfml-dev.org/learn.php) - C++ graphics library
 . 
+## Lisence
+
+* Lisenced with GPL. See Lisence.md.
 
 ## Authors
 
