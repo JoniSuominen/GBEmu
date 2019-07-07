@@ -187,36 +187,14 @@ void CPU::cycle() {
 	int cyclesBefore = 0;
 	timerCounter = CLOCKSPEED / 1024;
 	while (this->cycles < MAX_CYCLES) {
-		if (pc == 0x100) {
-			registerAF.reg = 0x1180;
-			registerBC.reg = 0x0;
-			registerDE.reg = 0xFF56;
-			registerHL.reg = 0xD;
-		}
 
-		// TIMERI ONGELMIA
-		if (pc == 0xC2C9)
-			cout << "";
-
-  	 		uint8_t opcode = Memory.readMemory(this->pc);
+		uint8_t opcode = Memory.readMemory(this->pc);
+		if (!halt) {
 			pc++;
-					executeOpCode(opcode);
-		// op r, (hl) 19 kertaa!!!
-		if (pc == 0x0061) {
-			cout << "";
 		}
-		if (pc == 0x021B) {
-			cout << "";
-		}
-		if (pc == 0x02A8) {
-			cout << "";
-		}
-		if (pc == 0xC17F) {
-			cout << "";
-		}
-		if (pc == 0xC092) {
-			cout << "";
-		}
+
+
+		executeOpCode(opcode);
 		
 		int opcodeCycles = cycles - cyclesBefore;
 		if (Memory.timerChanged) {
@@ -224,9 +202,8 @@ void CPU::cycle() {
 			Memory.timerChanged = false;
 		}
 		updateTimers(opcodeCycles);
-	handleInterrupts();
-					gpu->update(opcodeCycles);
-		//gpu->update(opcodeCycles);
+		handleInterrupts();
+		gpu->update(opcodeCycles);
 		cyclesBefore = cycles;
 	}
 	cycles = 0;
@@ -314,10 +291,10 @@ void CPU::init()
 	gpu->cpu = this;
 	
 	pc = 0x100;
-	registerAF.reg = 0x01B0;
-	registerBC.reg = 0x0013;
-	registerDE.reg = 0x00D8;
-	registerHL.reg = 0x014D;
+	registerAF.reg = 0x0100;
+	registerBC.reg = 0x0014;
+	registerDE.reg = 0x0000;
+	registerHL.reg = 0xC060;
 	sp.reg = 0xFFFE;
 	Memory.init();
 	gpu->mem = &Memory;
@@ -419,7 +396,8 @@ void CPU::setInterrupt(int bit)
 {
 	uint8_t reg = Memory.readMemory(0xFF0F);
 	reg = set_bit(reg, bit);
-	Memory.writeMemory(0xFF0F, reg);
+	Memory.writeInterruptState(reg);
+	halt = false;
 }
 
 /*

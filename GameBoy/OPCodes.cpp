@@ -420,14 +420,14 @@ void CPU::opcode_ldhl()
 
 	int8_t signedInt = static_cast<int8_t>(Memory.readMemory(this->pc));
 	pc++;
-	if (this->sp.reg + signedInt > 0xFF) {
+	if (this->sp.reg + signedInt > 0xFFFF) {
 		bitset(FLAG_C);
 	}
 	else {
 		bitreset(FLAG_C);
 	}
 
-	if ((this->sp.reg & 0xF) + (signedInt & 0xF) > 0xF) {
+	if (this->sp.reg + signedInt > 0x0FFF) {
 		bitset(FLAG_H);
 	}
 	else {
@@ -597,7 +597,7 @@ void CPU::add_signedToSP()
 	pc++;
 	bitreset(FLAG_Z);
 	bitreset(FLAG_N);
-	if ((this->sp.reg & 0x0FFF) + (signedInt & 0x0FFF) > 0x0FFF) {
+	if ((this->sp.reg & 0x0FFF) + signedInt > 0x0FFF) {
 		bitset(FLAG_H);
 	}
 	else {
@@ -610,6 +610,8 @@ void CPU::add_signedToSP()
 	else {
 		bitreset(FLAG_C);
 	}
+
+	sp.reg += signedInt;
 	cycles += 16;
 }
 

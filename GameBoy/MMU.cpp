@@ -26,7 +26,7 @@ uint8_t MMU::getJoyPadState()
 
 void MMU::writeInterruptState(uint8_t data)
 {
-	interruptflags = data;
+	mROM[0xFF0F] = data;
 }
 
 uint8_t MMU::readMemory(uint16_t address) {
@@ -41,7 +41,7 @@ uint8_t MMU::readMemory(uint16_t address) {
 	}
 	else if (address == 0xFF0F) {
 		// ei toimi
-		return interruptflags;
+		return mROM[0xFF0F];
 	}
 	// reading from ram memory bank
 	else if ((address >= 0xA000) && (address <= 0xBFFF)) {
@@ -55,8 +55,6 @@ uint8_t MMU::readMemory(uint16_t address) {
 
 void MMU::writeMemory(uint16_t address, uint8_t data)
 {
-
-
 	if (address == 0xFF00) {
 		 uint8_t bit4 = (data >> 4) & 0b00000001;
 		 uint8_t bit5 = (data >> 5) & 0b00000001;
